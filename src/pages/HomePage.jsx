@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import { onAuthStateChanged, signOut } from 'firebase/auth'
 import { auth } from '../firebase'
 
@@ -34,9 +34,14 @@ function HomePage() {
             Discover internship matches, manage your opportunities, and stay connected with students and hirers.
           </p>
         </div>
-        <button className="secondary-button" onClick={handleSignOut}>
-          Sign out
-        </button>
+        <div style={{ display: 'flex', gap: '12px' }}>
+          <Link to="/profile" className="secondary-button" style={{ textDecoration: 'none' }}>
+            Edit profile
+          </Link>
+          <button className="secondary-button" onClick={handleSignOut}>
+            Sign out
+          </button>
+        </div>
       </header>
 
       <section className="home-grid">
