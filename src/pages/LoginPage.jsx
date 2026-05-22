@@ -15,7 +15,7 @@ function LoginPage() {
 
     try {
       await signInWithEmailAndPassword(auth, email, password)
-      navigate('/')
+      navigate('/home')
     } catch (err) {
       const message = err?.message || 'Unable to sign in. Please try again.'
       setError(message)
