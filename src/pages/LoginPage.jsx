@@ -1,12 +1,25 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { signInWithEmailAndPassword } from 'firebase/auth'
+import { auth } from '../firebase'
 
 function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [error, setError] = useState('')
+  const navigate = useNavigate()
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault()
-    console.log('Login submitted', { email, password })
+    setError('')
+
+    try {
+      await signInWithEmailAndPassword(auth, email, password)
+      navigate('/')
+    } catch (err) {
+      const message = err?.message || 'Unable to sign in. Please try again.'
+      setError(message)
+    }
   }
 
   return (
@@ -51,6 +64,8 @@ function LoginPage() {
                 required
               />
             </div>
+
+            {error && <p className="error-text">{error}</p>}
 
             <button className="primary-button" type="submit">
               Log in

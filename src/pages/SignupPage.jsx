@@ -1,5 +1,7 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth'
+import { auth } from '../firebase'
 import './SignupPage.css'
 
 function SignupPage() {
@@ -13,11 +15,14 @@ function SignupPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirm, setShowConfirm] = useState(false)
   const [errors, setErrors] = useState({})
+  const [firebaseError, setFirebaseError] = useState('')
+  const navigate = useNavigate()
 
   function handleChange(e) {
     const { name, value } = e.target
-    setForm(prev => ({ ...prev, [name]: value }))
-    if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }))
+    setForm((prev) => ({ ...prev, [name]: value }))
+    if (errors[name]) setErrors((prev) => ({ ...prev, [name]: '' }))
+    if (firebaseError) setFirebaseError('')
   }
 
   function validate() {
@@ -33,15 +38,23 @@ function SignupPage() {
     return newErrors
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault()
     const newErrors = validate()
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors)
       return
     }
-    // TODO: connect to Firebase Auth
-    console.log('Sign up:', form)
+
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, form.email, form.password)
+      if (auth.currentUser) {
+        await updateProfile(auth.currentUser, { displayName: form.fullName })
+      }
+      navigate('/login')
+    } catch (error) {
+      setFirebaseError(error?.message || 'Unable to create account. Please try again.')
+    }
   }
 
   return (
@@ -93,7 +106,9 @@ function SignupPage() {
                 onChange={handleChange}
                 className={errors.role ? 'input-error' : ''}
               >
-                <option value="" disabled>Select your role</option>
+                <option value="" disabled>
+                  Select your role
+                </option>
                 <option value="student">Student</option>
                 <option value="professional">Professional</option>
               </select>
@@ -120,7 +135,7 @@ function SignupPage() {
               <button
                 type="button"
                 className="toggle-password"
-                onClick={() => setShowPassword(v => !v)}
+                onClick={() => setShowPassword((v) => !v)}
                 aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
                 {showPassword ? <EyeOffIcon /> : <EyeIcon />}
@@ -145,7 +160,7 @@ function SignupPage() {
               <button
                 type="button"
                 className="toggle-password"
-                onClick={() => setShowConfirm(v => !v)}
+                onClick={() => setShowConfirm((v) => !v)}
                 aria-label={showConfirm ? 'Hide password' : 'Show password'}
               >
                 {showConfirm ? <EyeOffIcon /> : <EyeIcon />}
@@ -154,7 +169,11 @@ function SignupPage() {
             {errors.confirmPassword && <p className="error-text">{errors.confirmPassword}</p>}
           </div>
 
-          <button type="submit" className="submit-btn">Create account</button>
+          {firebaseError && <p className="error-text">{firebaseError}</p>}
+
+          <button type="submit" className="submit-btn">
+            Create account
+          </button>
         </form>
 
         <p className="login-link">
