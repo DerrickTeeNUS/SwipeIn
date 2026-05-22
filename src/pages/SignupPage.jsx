@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth'
-import { auth } from '../firebase'
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore'
+import { auth, db } from '../firebase'
 import './SignupPage.css'
 
 function SignupPage() {
@@ -48,10 +49,17 @@ function SignupPage() {
 
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, form.email, form.password)
-      if (auth.currentUser) {
-        await updateProfile(auth.currentUser, { displayName: form.fullName })
-      }
-      navigate('/login')
+      const user = userCredential.user
+      await updateProfile(user, { displayName: form.fullName })
+      await setDoc(doc(db, 'users', user.uid), {
+        uid: user.uid,
+        email: form.email,
+        displayName: form.fullName,
+        role: form.role,
+        createdAt: serverTimestamp(),
+        profileComplete: false,
+      })
+      navigate('/profile')
     } catch (error) {
       setFirebaseError(error?.message || 'Unable to create account. Please try again.')
     }
