@@ -1,18 +1,26 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { onAuthStateChanged, signOut } from 'firebase/auth'
-import { auth } from '../firebase'
+import { doc, getDoc } from 'firebase/firestore'
+import { auth, db } from '../firebase'
 
 function HomePage() {
   const [user, setUser] = useState(null)
+  const [userRole, setUserRole] = useState('')
   const navigate = useNavigate()
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       if (!firebaseUser) {
         navigate('/login')
       } else {
         setUser(firebaseUser)
+        try {
+          const snap = await getDoc(doc(db, 'users', firebaseUser.uid))
+          if (snap.exists()) setUserRole(snap.data().role || '')
+        } catch {
+          // role stays empty
+        }
       }
     })
 
@@ -35,7 +43,11 @@ function HomePage() {
           </p>
         </div>
         <div style={{ display: 'flex', gap: '12px' }}>
-          <Link to={`/student/${user?.uid}`} className="secondary-button" style={{ textDecoration: 'none' }}>
+          <Link
+            to={userRole === 'professional' ? `/professional/${user?.uid}` : `/student/${user?.uid}`}
+            className="secondary-button"
+            style={{ textDecoration: 'none' }}
+          >
             View profile
           </Link>
           <Link to="/profile" className="secondary-button" style={{ textDecoration: 'none' }}>

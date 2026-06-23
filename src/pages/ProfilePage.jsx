@@ -125,7 +125,7 @@ function ProfilePage() {
 
       await setDoc(
         doc(db, 'users', uid),
-        { ...form, photoURL, profileComplete: true, updatedAt: serverTimestamp(), ...(userRole && { role: userRole }) },
+        { ...form, photoURL, displayName, profileComplete: true, updatedAt: serverTimestamp(), ...(userRole && { role: userRole }) },
         { merge: true }
       )
 

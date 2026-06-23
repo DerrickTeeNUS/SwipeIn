@@ -4,6 +4,7 @@ import SignupPage from './pages/SignupPage'
 import ProfilePage from './pages/ProfilePage'
 import HomePage from './pages/HomePage'
 import StudentProfilePage from './pages/StudentProfilePage'
+import ProfessionalProfilePage from './pages/ProfessionalProfilePage'
 
 function App() {
   return (
@@ -15,6 +16,7 @@ function App() {
         <Route path="/profile" element={<ProfilePage />} />
         <Route path="/home" element={<HomePage />} />
         <Route path="/student/:uid" element={<StudentProfilePage />} />
+        <Route path="/professional/:uid" element={<ProfessionalProfilePage />} />
       </Routes>
     </BrowserRouter>
   )
