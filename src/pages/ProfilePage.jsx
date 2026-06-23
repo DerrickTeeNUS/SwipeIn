@@ -114,20 +114,25 @@ function ProfilePage() {
       let photoURL = existingPhotoURL
 
       if (photoFile) {
-        const storageRef = ref(storage, `profile-photos/${uid}`)
-        await uploadBytes(storageRef, photoFile)
-        photoURL = await getDownloadURL(storageRef)
+        try {
+          const storageRef = ref(storage, `profile-photos/${uid}`)
+          await uploadBytes(storageRef, photoFile)
+          photoURL = await getDownloadURL(storageRef)
+        } catch (uploadErr) {
+          console.warn('Photo upload failed, saving without photo:', uploadErr)
+        }
       }
 
       await setDoc(
         doc(db, 'users', uid),
-        { ...form, photoURL, profileComplete: true, updatedAt: serverTimestamp() },
+        { ...form, photoURL, profileComplete: true, updatedAt: serverTimestamp(), ...(userRole && { role: userRole }) },
         { merge: true }
       )
 
       navigate('/home')
-    } catch {
-      setError('Failed to save profile. Please try again.')
+    } catch (err) {
+      console.error('Profile save error:', err)
+      setError(`Failed to save profile: ${err.message}`)
     } finally {
       setSubmitting(false)
     }

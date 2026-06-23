@@ -1,0 +1,296 @@
+.sp-page {
+  flex: 1;
+  padding: 32px 24px 64px;
+  background: linear-gradient(180deg, #f7f6ff 0%, #ffffff 60%);
+}
+
+.sp-loading,
+.sp-not-found {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  min-height: 60vh;
+  color: var(--text);
+}
+
+.sp-not-found h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: var(--text-h);
+}
+
+.sp-not-found p {
+  color: var(--text);
+}
+
+.sp-inner {
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+/* Back button */
+.sp-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 24px;
+  padding: 8px 16px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--text);
+  font-size: 14px;
+  font-family: var(--sans);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+
+.sp-back-btn:hover {
+  color: var(--text-h);
+  border-color: var(--accent);
+}
+
+/* Hero card */
+.sp-hero-card {
+  display: flex;
+  gap: 28px;
+  align-items: flex-start;
+  padding: 36px 40px;
+  border-radius: 20px;
+  background: var(--bg);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+  margin-bottom: 20px;
+}
+
+.sp-avatar {
+  flex-shrink: 0;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: var(--accent-bg);
+  border: 2px solid var(--accent-border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.sp-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.sp-avatar-initials {
+  font-size: 38px;
+  font-weight: 600;
+  color: var(--accent);
+  letter-spacing: -1px;
+}
+
+.sp-hero-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.sp-hero-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 20px;
+}
+
+.sp-name {
+  font-size: 28px;
+  font-weight: 600;
+  color: var(--text-h);
+  letter-spacing: -0.5px;
+  margin: 0 0 6px;
+}
+
+.sp-headline {
+  font-size: 15px;
+  color: var(--text);
+  margin: 0 0 8px;
+  line-height: 1.5;
+}
+
+.sp-location {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 14px;
+  color: var(--text);
+  margin: 0;
+}
+
+/* Hero action buttons */
+.sp-hero-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-end;
+  flex-shrink: 0;
+}
+
+.sp-edit-btn {
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 18px;
+  border-radius: 10px;
+  background: var(--accent);
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: var(--sans);
+  text-decoration: none;
+  transition: opacity 0.15s;
+  white-space: nowrap;
+}
+
+.sp-edit-btn:hover {
+  opacity: 0.88;
+}
+
+.sp-link-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text-h);
+  font-size: 14px;
+  font-family: var(--sans);
+  text-decoration: none;
+  transition: border-color 0.15s, color 0.15s;
+  white-space: nowrap;
+}
+
+.sp-link-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+/* Body sections */
+.sp-body {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.sp-section-card {
+  padding: 28px 32px;
+  border-radius: 16px;
+  background: var(--bg);
+  box-shadow: var(--shadow);
+  border: 1px solid var(--border);
+  text-align: left;
+}
+
+.sp-section-title {
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text);
+  margin: 0 0 16px;
+}
+
+.sp-about-text {
+  font-size: 15px;
+  line-height: 1.7;
+  color: var(--text-h);
+  white-space: pre-wrap;
+}
+
+/* Education */
+.sp-edu-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.sp-edu-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--accent-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.sp-edu-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sp-edu-school {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--text-h);
+  margin: 0;
+}
+
+.sp-edu-sub {
+  font-size: 14px;
+  color: var(--text);
+  margin: 0;
+}
+
+/* Skills */
+.sp-skills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.sp-skill-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 5px 14px;
+  background: var(--accent-bg);
+  border: 1px solid var(--accent-border);
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--accent);
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .sp-hero-card {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 28px 24px;
+  }
+
+  .sp-hero-top {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .sp-hero-actions {
+    align-items: center;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .sp-location {
+    justify-content: center;
+  }
+
+  .sp-section-card {
+    padding: 22px 20px;
+  }
+}

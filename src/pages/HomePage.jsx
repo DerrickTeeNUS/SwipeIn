@@ -35,6 +35,9 @@ function HomePage() {
           </p>
         </div>
         <div style={{ display: 'flex', gap: '12px' }}>
+          <Link to={`/student/${user?.uid}`} className="secondary-button" style={{ textDecoration: 'none' }}>
+            View profile
+          </Link>
           <Link to="/profile" className="secondary-button" style={{ textDecoration: 'none' }}>
             Edit profile
           </Link>
