@@ -1,0 +1,122 @@
+.messages-page {
+  min-height: 100svh;
+  padding: 24px;
+  background: linear-gradient(180deg, #f7f6ff 0%, #ffffff 100%);
+}
+
+.messages-shell {
+  max-width: 840px;
+  margin: 0 auto;
+}
+
+.messages-card {
+  background: #fff;
+  border-radius: 28px;
+  padding: 24px;
+  box-shadow: 0 16px 45px rgba(56, 32, 124, 0.08);
+  border: 1px solid rgba(112, 64, 255, 0.12);
+}
+
+.messages-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: start;
+  margin-bottom: 20px;
+}
+
+.messages-subtitle {
+  color: #625b76;
+  margin-top: 8px;
+  line-height: 1.6;
+}
+
+.back-button {
+  border: none;
+  background: #f2edff;
+  color: #6d4bff;
+  border-radius: 999px;
+  padding: 10px 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.message-thread {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 18px;
+  max-height: 340px;
+  overflow-y: auto;
+}
+
+.message-bubble {
+  max-width: 80%;
+  padding: 12px 14px;
+  border-radius: 16px;
+  line-height: 1.5;
+}
+
+.message-bubble.mine {
+  margin-left: auto;
+  background: linear-gradient(135deg, #6d4bff, #aa3bff);
+  color: #fff;
+}
+
+.message-bubble.theirs {
+  background: #f2efff;
+  color: #2f234f;
+}
+
+.message-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.message-suggestions button {
+  border: 1px solid #ddd7f0;
+  background: #fcfbff;
+  border-radius: 999px;
+  padding: 8px 12px;
+  cursor: pointer;
+  color: #4c3f74;
+}
+
+.message-form {
+  display: grid;
+  gap: 12px;
+}
+
+.message-form textarea {
+  width: 100%;
+  border: 1px solid #ddd7f0;
+  border-radius: 16px;
+  padding: 14px 16px;
+  min-height: 110px;
+  resize: vertical;
+  box-sizing: border-box;
+}
+
+.primary-button {
+  width: fit-content;
+  min-height: 48px;
+  border: none;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #6d4bff 0%, #3e3dc2 100%);
+  color: white;
+  font-weight: 700;
+  padding: 0 18px;
+  cursor: pointer;
+}
+
+@media (max-width: 640px) {
+  .messages-card {
+    padding: 18px;
+  }
+
+  .messages-header {
+    flex-direction: column;
+  }
+}

@@ -53,6 +53,9 @@ function HomePage() {
           <Link to="/profile" className="secondary-button" style={{ textDecoration: 'none' }}>
             Edit profile
           </Link>
+          <Link to="/messages" className="secondary-button" style={{ textDecoration: 'none' }}>
+            Messages
+          </Link>
           <button className="secondary-button" onClick={handleSignOut}>
             Sign out
           </button>
