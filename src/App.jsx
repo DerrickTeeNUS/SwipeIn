@@ -5,6 +5,7 @@ import ProfilePage from './pages/ProfilePage'
 import HomePage from './pages/HomePage'
 import StudentProfilePage from './pages/StudentProfilePage'
 import ProfessionalProfilePage from './pages/ProfessionalProfilePage'
+import SwipePage from './pages/SwipePage'
 import MessagesPage from './pages/MessagesPage'
 
 function App() {
@@ -18,6 +19,7 @@ function App() {
         <Route path="/home" element={<HomePage />} />
         <Route path="/student/:uid" element={<StudentProfilePage />} />
         <Route path="/professional/:uid" element={<ProfessionalProfilePage />} />
+        <Route path="/swipe" element={<SwipePage />} />
         <Route path="/messages" element={<MessagesPage />} />
       </Routes>
     </BrowserRouter>

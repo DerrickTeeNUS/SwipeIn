@@ -62,6 +62,29 @@ function HomePage() {
         </div>
       </header>
 
+      <div style={{ maxWidth: 1120, margin: '0 auto 24px' }}>
+        <Link
+          to="/swipe"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            padding: '20px 28px',
+            borderRadius: 20,
+            background: 'linear-gradient(135deg, #6d4bff 0%, #aa3bff 100%)',
+            color: '#fff',
+            textDecoration: 'none',
+            boxShadow: '0 8px 30px rgba(109,75,255,0.3)',
+          }}
+        >
+          <div>
+            <p style={{ margin: '0 0 4px', fontWeight: 700, fontSize: '1.1rem' }}>Start swiping</p>
+            <p style={{ margin: 0, opacity: 0.85, fontSize: '0.9rem' }}>Find your next internship match</p>
+          </div>
+          <span style={{ fontSize: 28 }}>→</span>
+        </Link>
+      </div>
+
       <section className="home-grid">
         <article className="home-card">
           <h2>Find your best fit</h2>
