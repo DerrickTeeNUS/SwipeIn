@@ -3,7 +3,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth'
 import { setDoc } from 'firebase/firestore'
-import SignupPage from '../pages/SignupPage'
+import SignupPage from './SignupPage'
 
 vi.mock('../firebase', () => ({ auth: {}, db: {} }))
 

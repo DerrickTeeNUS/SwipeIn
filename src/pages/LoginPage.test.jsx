@@ -2,7 +2,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { signInWithEmailAndPassword } from 'firebase/auth'
-import LoginPage from '../pages/LoginPage'
+import LoginPage from './LoginPage'
 
 vi.mock('../firebase', () => ({ auth: {} }))
 

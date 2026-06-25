@@ -3,7 +3,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { onAuthStateChanged } from 'firebase/auth'
 import { getDoc, getDocs, setDoc } from 'firebase/firestore'
-import SwipePage from '../pages/SwipePage'
+import SwipePage from './SwipePage'
 
 const CURRENT_USER = { uid: 'user-1', role: 'student', displayName: 'Test User' }
 
@@ -151,7 +151,6 @@ describe('SwipePage', () => {
     fireEvent.click(await screen.findByRole('button', { name: /like/i }))
 
     expect(await screen.findByText(/it's a match/i)).toBeInTheDocument()
-    // The modal subtitle is unique: "You and Alex Kim matched"
     expect(screen.getByText(/you and alex kim matched/i)).toBeInTheDocument()
   })
 
