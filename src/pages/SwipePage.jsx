@@ -8,11 +8,42 @@ import './SwipePage.css'
 const SWIPE_THRESHOLD = 100
 const FLY_MS = 380
 
+function getFilteredProfiles(sourceProfiles, filters, role) {
+  const location = filters.location.trim().toLowerCase()
+  const industry = filters.industry.trim().toLowerCase()
+  const skills = filters.skills.trim().toLowerCase()
+  const university = filters.university.trim().toLowerCase()
+
+  return sourceProfiles.filter((profile) => {
+    if (location && !String(profile.location || '').toLowerCase().includes(location)) {
+      return false
+    }
+
+    if (role === 'student') {
+      if (industry && !String(profile.industry || '').toLowerCase().includes(industry)) {
+        return false
+      }
+    } else {
+      const skillText = (profile.skills || []).join(' ').toLowerCase()
+      if (skills && !skillText.includes(skills)) {
+        return false
+      }
+      if (university && !String(profile.university || '').toLowerCase().includes(university)) {
+        return false
+      }
+    }
+
+    return true
+  })
+}
+
 export default function SwipePage() {
   const navigate = useNavigate()
   const [currentUser, setCurrentUser] = useState(null)
+  const [allProfiles, setAllProfiles] = useState([])
   const [profiles, setProfiles] = useState([])
   const [index, setIndex] = useState(0)
+  const [filters, setFilters] = useState({ location: '', industry: '', skills: '', university: '' })
   const [loading, setLoading] = useState(true)
   const [matchedProfile, setMatchedProfile] = useState(null)
   const topCardRef = useRef(null)
@@ -38,11 +69,9 @@ export default function SwipePage() {
 
         const swipedIds = new Set(swipesSnap.docs.map(d => d.data().to))
         const allOpposite = profilesSnap.docs.map(d => ({ ...d.data(), uid: d.id }))
-        console.log('Opposite role profiles found:', allOpposite.length, allOpposite)
+        const visibleOpposite = allOpposite.filter(p => p.uid !== user.uid && !swipedIds.has(p.uid))
 
-        setProfiles(
-          allOpposite.filter(p => p.uid !== user.uid && !swipedIds.has(p.uid))
-        )
+        setAllProfiles(visibleOpposite)
       } catch (err) {
         console.error('SwipePage load error:', err)
       } finally {
@@ -51,6 +80,22 @@ export default function SwipePage() {
     })
     return unsub
   }, [navigate])
+
+  useEffect(() => {
+    if (!currentUser) return
+    const nextProfiles = getFilteredProfiles(allProfiles, filters, currentUser.role || 'student')
+    setProfiles(nextProfiles)
+    setIndex(0)
+  }, [allProfiles, currentUser, filters])
+
+  const handleFilterChange = useCallback((event) => {
+    const { name, value } = event.target
+    setFilters(prev => ({ ...prev, [name]: value }))
+  }, [])
+
+  const clearFilters = useCallback(() => {
+    setFilters({ location: '', industry: '', skills: '', university: '' })
+  }, [])
 
   const doSwipe = useCallback(async (dir, profile) => {
     if (!currentUser || !profile) return
@@ -110,6 +155,7 @@ export default function SwipePage() {
   }
 
   const visibleProfiles = profiles.slice(index, index + 3)
+  const hasActiveFilters = Object.values(filters).some(value => String(value).trim())
 
   return (
     <div className="swipe-page">
@@ -121,12 +167,67 @@ export default function SwipePage() {
         <div className="swipe-nav-spacer" />
       </header>
 
+      <div className="swipe-filters" aria-label="Swipe feed filters">
+        <label className="swipe-filter-field">
+          <span>Location</span>
+          <input
+            name="location"
+            value={filters.location}
+            onChange={handleFilterChange}
+            placeholder="Any city"
+            aria-label="Location"
+          />
+        </label>
+
+        {currentUser?.role === 'student' ? (
+          <label className="swipe-filter-field">
+            <span>Industry</span>
+            <input
+              name="industry"
+              value={filters.industry}
+              onChange={handleFilterChange}
+              placeholder="e.g. technology"
+              aria-label="Industry"
+            />
+          </label>
+        ) : (
+          <>
+            <label className="swipe-filter-field">
+              <span>Skills</span>
+              <input
+                name="skills"
+                value={filters.skills}
+                onChange={handleFilterChange}
+                placeholder="e.g. design"
+                aria-label="Skills"
+              />
+            </label>
+            <label className="swipe-filter-field">
+              <span>University</span>
+              <input
+                name="university"
+                value={filters.university}
+                onChange={handleFilterChange}
+                placeholder="Any school"
+                aria-label="University"
+              />
+            </label>
+          </>
+        )}
+
+        {hasActiveFilters && (
+          <button type="button" className="swipe-filter-clear" onClick={clearFilters}>
+            Clear
+          </button>
+        )}
+      </div>
+
       <div className="swipe-area">
         {visibleProfiles.length === 0 ? (
           <div className="swipe-empty">
             <div className="swipe-empty-icon"><SparkleIcon /></div>
-            <h2>You've seen everyone!</h2>
-            <p>Check back later for new profiles.</p>
+            <h2>{hasActiveFilters ? 'No matches for those filters' : "You've seen everyone!"}</h2>
+            <p>{hasActiveFilters ? 'Try widening your filters to see more people.' : 'Check back later for new profiles.'}</p>
             <Link to="/home" className="swipe-empty-btn">Back to home</Link>
           </div>
         ) : (
@@ -346,15 +447,20 @@ function MatchModal({ currentUser, matched, onClose }) {
               : <span>{matchedInitials}</span>}
           </div>
         </div>
-        <button
-          className="match-action-btn"
-          onClick={() => {
-            onClose()
-            navigate('/messages')
-          }}
-        >
-          Start chatting
-        </button>
+        <div className="match-actions">
+          <button className="match-action-btn match-action-secondary" onClick={onClose}>
+            Keep swiping
+          </button>
+          <button
+            className="match-action-btn"
+            onClick={() => {
+              onClose()
+              navigate('/messages')
+            }}
+          >
+            Start chatting
+          </button>
+        </div>
       </div>
     </div>
   )
