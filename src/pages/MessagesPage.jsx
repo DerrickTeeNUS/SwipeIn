@@ -12,10 +12,58 @@ import {
   orderBy,
   query,
   serverTimestamp,
+  setDoc,
   where,
 } from 'firebase/firestore'
 import { auth, db } from '../firebase'
 import './MessagesPage.css'
+
+const LOCAL_MESSAGES_PREFIX = 'swipein-messages'
+
+function getStoredMessages(conversationId) {
+  if (typeof window === 'undefined') return []
+
+  try {
+    const saved = window.localStorage.getItem(`${LOCAL_MESSAGES_PREFIX}:${conversationId}`)
+    return saved ? JSON.parse(saved) : []
+  } catch {
+    return []
+  }
+}
+
+function saveStoredMessages(conversationId, messages) {
+  if (typeof window === 'undefined') return
+
+  try {
+    window.localStorage.setItem(`${LOCAL_MESSAGES_PREFIX}:${conversationId}`, JSON.stringify(messages))
+  } catch {
+    // Ignore storage errors
+  }
+}
+
+function getMessageTimestamp(value) {
+  if (!value) return 0
+  if (typeof value?.toDate === 'function') return value.toDate().getTime()
+  if (value instanceof Date) return value.getTime()
+  if (typeof value === 'number') return value
+  return 0
+}
+
+function mergeMessages(serverMessages, localMessages) {
+  const merged = [...serverMessages, ...localMessages]
+  const uniqueMessages = []
+  const seen = new Set()
+
+  merged.forEach((message) => {
+    const key = message.id || `${message.senderId || 'unknown'}-${message.text || ''}-${getMessageTimestamp(message.createdAt)}`
+    if (!seen.has(key)) {
+      seen.add(key)
+      uniqueMessages.push(message)
+    }
+  })
+
+  return uniqueMessages.sort((a, b) => getMessageTimestamp(a.createdAt) - getMessageTimestamp(b.createdAt))
+}
 
 function MessagesPage() {
   const navigate = useNavigate()
@@ -26,6 +74,7 @@ function MessagesPage() {
   const [draft, setDraft] = useState('')
   const [loading, setLoading] = useState(true)
   const [sending, setSending] = useState(false)
+  const [storageNotice, setStorageNotice] = useState('')
 
   const activeConversation = useMemo(
     () => conversations.find((conversation) => conversation.id === activeConversationId) || null,
@@ -54,55 +103,78 @@ function MessagesPage() {
   useEffect(() => {
     if (!currentUser?.uid) return
 
+    let isActive = true
+
     const loadConversations = async () => {
-      const matchesSnap = await getDocs(
-        query(collection(db, 'matches'), where('users', 'array-contains', currentUser.uid)),
-      )
+      try {
+        const matchesSnap = await getDocs(
+          query(collection(db, 'matches'), where('users', 'array-contains', currentUser.uid)),
+        )
 
-      const loadedConversations = await Promise.all(
-        matchesSnap.docs.map(async (matchDoc) => {
-          const matchData = matchDoc.data()
-          const partnerUid = matchData.users.find((uid) => uid !== currentUser.uid)
+        const loadedConversations = await Promise.all(
+          matchesSnap.docs.map(async (matchDoc) => {
+            const matchData = matchDoc.data()
+            const partnerUid = matchData.users.find((uid) => uid !== currentUser.uid)
 
-          const [partnerSnap, latestMessagesSnap] = await Promise.all([
-            getDoc(doc(db, 'users', partnerUid)),
-            getDocs(
-              query(
-                collection(db, 'messages', matchDoc.id, 'messages'),
-                orderBy('createdAt', 'desc'),
-                limit(1),
-              ),
-            ),
-          ])
+            const [partnerSnap, latestMessagesSnap] = await Promise.all([
+              getDoc(doc(db, 'users', partnerUid)).catch(() => ({ exists: () => false })),
+              getDocs(
+                query(
+                  collection(db, 'messages', matchDoc.id, 'messages'),
+                  orderBy('createdAt', 'desc'),
+                  limit(1),
+                ),
+              ).catch(() => ({ docs: [] })),
+            ])
 
-          const partnerData = partnerSnap.exists() ? partnerSnap.data() : {}
-          const latestMessage = latestMessagesSnap.docs[0]?.data() || null
+            const partnerData = partnerSnap.exists ? partnerSnap.data() : {}
+            const firestoreMessages = latestMessagesSnap.docs.map((messageDoc) => ({ id: messageDoc.id, ...messageDoc.data() }))
+            const storedMessages = getStoredMessages(matchDoc.id)
+            const latestMessage = [...firestoreMessages, ...storedMessages].sort(
+              (a, b) => getMessageTimestamp(b.createdAt) - getMessageTimestamp(a.createdAt),
+            )[0] || null
 
-          return {
-            id: matchDoc.id,
-            partnerUid,
-            partnerName: partnerData.displayName || 'Your match',
-            partnerRole: partnerData.role || 'student',
-            preview: latestMessage?.text || 'Say hello and introduce yourself.',
-            updatedAt: latestMessage?.createdAt?.toDate ? latestMessage.createdAt.toDate() : null,
-          }
-        }),
-      )
+            return {
+              id: matchDoc.id,
+              partnerUid,
+              partnerName: partnerData.displayName || 'Your match',
+              partnerRole: partnerData.role || 'student',
+              preview: latestMessage?.text || 'Say hello and introduce yourself.',
+              updatedAt: latestMessage?.createdAt?.toDate ? latestMessage.createdAt.toDate() : latestMessage?.createdAt instanceof Date ? latestMessage.createdAt : null,
+            }
+          }),
+        )
 
-      const sortedConversations = loadedConversations.sort((a, b) => {
-        const timeA = a.updatedAt?.getTime() || 0
-        const timeB = b.updatedAt?.getTime() || 0
-        return timeB - timeA
-      })
+        if (!isActive) return
 
-      setConversations(sortedConversations)
-      if (!activeConversationId && sortedConversations[0]) {
-        setActiveConversationId(sortedConversations[0].id)
+        const sortedConversations = loadedConversations.sort((a, b) => {
+          const timeA = a.updatedAt?.getTime() || 0
+          const timeB = b.updatedAt?.getTime() || 0
+          return timeB - timeA
+        })
+
+        setConversations(sortedConversations)
+        if (!activeConversationId && sortedConversations[0]) {
+          setActiveConversationId(sortedConversations[0].id)
+        }
+      } catch (err) {
+        console.error('Conversation load error:', err)
+        if (isActive) {
+          setConversations([])
+          setActiveConversationId('')
+        }
+      } finally {
+        if (isActive) {
+          setLoading(false)
+        }
       }
-      setLoading(false)
     }
 
     loadConversations()
+
+    return () => {
+      isActive = false
+    }
   }, [activeConversationId, currentUser?.uid])
 
   useEffect(() => {
@@ -114,7 +186,14 @@ function MessagesPage() {
     const unsubscribe = onSnapshot(
       query(collection(db, 'messages', activeConversationId, 'messages'), orderBy('createdAt', 'asc')),
       (snapshot) => {
-        setMessages(snapshot.docs.map((messageDoc) => ({ id: messageDoc.id, ...messageDoc.data() })))
+        const firestoreMessages = snapshot.docs.map((messageDoc) => ({ id: messageDoc.id, ...messageDoc.data() }))
+        const localMessages = getStoredMessages(activeConversationId)
+        setMessages(mergeMessages(firestoreMessages, localMessages))
+      },
+      (err) => {
+        console.error('Message stream error:', err)
+        const localMessages = getStoredMessages(activeConversationId)
+        setMessages(localMessages)
       },
     )
 
@@ -122,13 +201,13 @@ function MessagesPage() {
   }, [activeConversationId])
 
   useEffect(() => {
-    if (!activeConversation) return
+    if (!activeConversation) {
+      setDraft('')
+      return
+    }
 
-    const firstName = activeConversation.partnerName.split(' ')[0] || 'there'
-    setDraft(
-      `Hi ${firstName}! I’m ${currentUser?.displayName || 'a SwipeIn member'} and I’d love to introduce myself. I’m excited to connect with you.`,
-    )
-  }, [activeConversation, currentUser?.displayName])
+    setDraft('')
+  }, [activeConversation?.id])
 
   const refreshConversations = async (selectedId = activeConversationId) => {
     if (!currentUser?.uid) return
@@ -153,7 +232,11 @@ function MessagesPage() {
         ])
 
         const partnerData = partnerSnap.exists() ? partnerSnap.data() : {}
-        const latestMessage = latestMessagesSnap.docs[0]?.data() || null
+        const firestoreMessages = latestMessagesSnap.docs.map((messageDoc) => ({ id: messageDoc.id, ...messageDoc.data() }))
+        const storedMessages = getStoredMessages(matchDoc.id)
+        const latestMessage = [...firestoreMessages, ...storedMessages].sort(
+          (a, b) => getMessageTimestamp(b.createdAt) - getMessageTimestamp(a.createdAt),
+        )[0] || null
 
         return {
           id: matchDoc.id,
@@ -161,7 +244,7 @@ function MessagesPage() {
           partnerName: partnerData.displayName || 'Your match',
           partnerRole: partnerData.role || 'student',
           preview: latestMessage?.text || 'Say hello and introduce yourself.',
-          updatedAt: latestMessage?.createdAt?.toDate ? latestMessage.createdAt.toDate() : null,
+          updatedAt: latestMessage?.createdAt?.toDate ? latestMessage.createdAt.toDate() : latestMessage?.createdAt instanceof Date ? latestMessage.createdAt : null,
         }
       }),
     )
@@ -185,18 +268,45 @@ function MessagesPage() {
     if (!draft.trim() || !activeConversationId || !currentUser?.uid || sending) return
 
     setSending(true)
+    setStorageNotice('')
+
+    const messageText = draft.trim()
+    const optimisticMessage = {
+      id: `local-${Date.now()}`,
+      text: messageText,
+      senderId: currentUser.uid,
+      senderName: currentUser.displayName || 'You',
+      createdAt: new Date(),
+    }
+
+    const storedMessages = mergeMessages(getStoredMessages(activeConversationId), [optimisticMessage])
+    saveStoredMessages(activeConversationId, storedMessages)
+    setMessages((previousMessages) => mergeMessages(previousMessages, [optimisticMessage]))
+
     try {
       await addDoc(collection(db, 'messages', activeConversationId, 'messages'), {
-        text: draft.trim(),
+        text: messageText,
         senderId: currentUser.uid,
         senderName: currentUser.displayName || 'You',
         createdAt: serverTimestamp(),
       })
 
-      setDraft(`Hi ${activeConversation?.partnerName?.split(' ')[0] || 'there'}! I’m ${currentUser?.displayName || 'a SwipeIn member'} and I’d love to introduce myself. I’m excited to connect with you.`)
+      await setDoc(
+        doc(db, 'matches', activeConversationId),
+        {
+          lastMessage: messageText,
+          lastMessageBy: currentUser.uid,
+          lastMessageAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        },
+        { merge: true },
+      )
+
+      setDraft('')
       await refreshConversations(activeConversationId)
     } catch (err) {
       console.error('Message send error:', err)
+      setStorageNotice('Your message was saved locally and will appear once the connection is available again.')
     } finally {
       setSending(false)
     }
@@ -300,10 +410,11 @@ function MessagesPage() {
                   value={draft}
                   onChange={(event) => setDraft(event.target.value)}
                   rows={4}
-                  placeholder="Write your intro message"
+                  placeholder="Send a message"
                 />
+                {storageNotice ? <p className="conversation-preview">{storageNotice}</p> : null}
                 <button className="primary-button" type="submit" disabled={sending}>
-                  {sending ? 'Sending…' : 'Send intro'}
+                  {sending ? 'Sending…' : 'Send message'}
                 </button>
               </form>
             </>
