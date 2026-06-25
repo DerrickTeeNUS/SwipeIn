@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { onAuthStateChanged, signOut } from 'firebase/auth'
 import {
-  doc, getDoc, getDocs, addDoc,
+  doc, getDoc, getDocs, addDoc, deleteDoc,
   collection, query, orderBy, limit, where, serverTimestamp,
 } from 'firebase/firestore'
 import { auth, db } from '../firebase'
@@ -53,11 +53,29 @@ function HomePage() {
   async function loadFeed(uid) {
     setFeedLoading(true)
     try {
-      const [oppSnap, appSnap] = await Promise.all([
-        getDocs(query(collection(db, 'opportunities'), orderBy('createdAt', 'desc'), limit(30))),
+      const [matchesSnap, appSnap] = await Promise.all([
+        getDocs(query(collection(db, 'matches'), where('users', 'array-contains', uid))),
         getDocs(query(collection(db, 'applications'), where('studentId', '==', uid))),
       ])
-      setOpportunities(oppSnap.docs.map(d => ({ id: d.id, ...d.data() })))
+
+      const matchedProfessionalIds = new Set(
+        matchesSnap.docs
+          .map(d => (d.data().users || []).find(id => id !== uid))
+          .filter(Boolean)
+      )
+
+      if (matchedProfessionalIds.size > 0) {
+        const oppSnap = await getDocs(
+          query(collection(db, 'opportunities'), orderBy('createdAt', 'desc'), limit(30))
+        )
+        const filtered = oppSnap.docs
+          .map(d => ({ id: d.id, ...d.data() }))
+          .filter(opp => matchedProfessionalIds.has(opp.professionalId))
+        setOpportunities(filtered)
+      } else {
+        setOpportunities([])
+      }
+
       const apps = appSnap.docs.map(d => ({ id: d.id, ...d.data() }))
       setMyApplications(apps)
       setAppliedIds(new Set(apps.map(a => a.opportunityId)))
@@ -104,6 +122,15 @@ function HomePage() {
     }
   }
 
+  async function deleteApplication(id) {
+    setMyApplications(prev => prev.filter(a => a.id !== id))
+    try {
+      await deleteDoc(doc(db, 'applications', id))
+    } catch (err) {
+      console.error('Failed to delete application:', err)
+    }
+  }
+
   function closeApplyModal() {
     setApplyModal(null)
     setApplyMessage('')
@@ -125,54 +152,38 @@ function HomePage() {
             Discover internship matches, manage your opportunities, and stay connected with students and hirers.
           </p>
         </div>
-        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+        <nav className="home-nav">
           <Link
             to={userRole === 'professional' ? `/professional/${user?.uid}` : `/student/${user?.uid}`}
-            className="secondary-button"
-            style={{ textDecoration: 'none' }}
+            className="home-nav-link"
           >
             View profile
           </Link>
-          <Link to="/profile" className="secondary-button" style={{ textDecoration: 'none' }}>
+          <Link to="/profile" className="home-nav-link">
             Edit profile
           </Link>
           {userRole === 'professional' && (
-            <Link to="/opportunities" className="secondary-button" style={{ textDecoration: 'none' }}>
+            <Link to="/opportunities" className="home-nav-link">
               Opportunities
             </Link>
           )}
-          <Link to="/messages" className="secondary-button" style={{ textDecoration: 'none' }}>
+          <Link to="/messages" className="home-nav-link">
             Messages
           </Link>
-          <button className="secondary-button" onClick={handleSignOut}>
+          <button className="home-nav-link home-nav-signout" onClick={handleSignOut}>
             Sign out
           </button>
-        </div>
+        </nav>
       </header>
 
       {/* STUDENT: my applications + feed */}
       {userRole === 'student' && (
         <>
-          <div style={{ maxWidth: 1120, margin: '0 auto 24px' }}>
-            <Link
-              to="/swipe"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: '20px 28px',
-                borderRadius: 20,
-                background: 'linear-gradient(135deg, #6d4bff 0%, #aa3bff 100%)',
-                color: '#fff',
-                textDecoration: 'none',
-                boxShadow: '0 8px 30px rgba(109,75,255,0.3)',
-              }}
-            >
-              <div>
-                <p style={{ margin: '0 0 4px', fontWeight: 700, fontSize: '1.1rem' }}>Start swiping</p>
-                <p style={{ margin: 0, opacity: 0.85, fontSize: '0.9rem' }}>Find your next internship match</p>
-              </div>
-              <span style={{ fontSize: 28 }}>→</span>
+          <div className="swipe-cta-wrap">
+            <Link to="/swipe" className="swipe-cta">
+              <span className="swipe-cta-label">Start swiping</span>
+              <span className="swipe-cta-sub">Find your next internship match</span>
+              <span className="swipe-cta-arrow">→</span>
             </Link>
           </div>
 
@@ -182,7 +193,7 @@ function HomePage() {
               <h2 className="feed-heading">My applications</h2>
               <div className="my-apps-list">
                 {myApplications.map(app => (
-                  <ApplicationStatusCard key={app.id} app={app} />
+                  <ApplicationStatusCard key={app.id} app={app} onDelete={deleteApplication} />
                 ))}
               </div>
             </section>
@@ -203,7 +214,7 @@ function HomePage() {
               <div className="feed-empty">
                 <p className="feed-empty-title">No opportunities yet</p>
                 <p className="feed-empty-sub">
-                  Check back soon — professionals are posting internships and mentorships for students like you.
+                  Match with professionals first — their opportunities will appear here once you connect.
                 </p>
               </div>
             )}
@@ -227,49 +238,16 @@ function HomePage() {
       {/* PROFESSIONAL: existing grid */}
       {userRole === 'professional' && (
         <>
-          <div style={{ maxWidth: 1120, margin: '0 auto 24px' }}>
-            <Link
-              to="/opportunities"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: '20px 28px',
-                borderRadius: 20,
-                background: 'linear-gradient(135deg, #6d4bff 0%, #aa3bff 100%)',
-                color: '#fff',
-                textDecoration: 'none',
-                boxShadow: '0 8px 30px rgba(109,75,255,0.3)',
-              }}
-            >
-              <div>
-                <p style={{ margin: '0 0 4px', fontWeight: 700, fontSize: '1.1rem' }}>Post an opportunity</p>
-                <p style={{ margin: 0, opacity: 0.85, fontSize: '0.9rem' }}>Reach students looking for internships and mentorship</p>
-              </div>
-              <span style={{ fontSize: 28 }}>→</span>
+          <div className="prof-cta-wrap">
+            <Link to="/opportunities" className="swipe-cta">
+              <span className="swipe-cta-label">Post an opportunity</span>
+              <span className="swipe-cta-sub">Reach students looking for internships and mentorship</span>
+              <span className="swipe-cta-arrow">→</span>
             </Link>
-          </div>
-
-          <div style={{ maxWidth: 1120, margin: '0 auto 24px' }}>
-            <Link
-              to="/swipe"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: '20px 28px',
-                borderRadius: 20,
-                background: '#fff',
-                color: '#5e4dd1',
-                textDecoration: 'none',
-                boxShadow: 'var(--shadow)',
-              }}
-            >
-              <div>
-                <p style={{ margin: '0 0 4px', fontWeight: 700, fontSize: '1.1rem' }}>Discover student profiles</p>
-                <p style={{ margin: 0, opacity: 0.7, fontSize: '0.9rem' }}>Swipe through candidates looking for opportunities</p>
-              </div>
-              <span style={{ fontSize: 28 }}>→</span>
+            <Link to="/swipe" className="swipe-cta swipe-cta--secondary">
+              <span className="swipe-cta-label">Discover student profiles</span>
+              <span className="swipe-cta-sub">Swipe through candidates looking for opportunities</span>
+              <span className="swipe-cta-arrow">→</span>
             </Link>
           </div>
 
@@ -358,7 +336,8 @@ function HomePage() {
   )
 }
 
-function ApplicationStatusCard({ app }) {
+function ApplicationStatusCard({ app, onDelete }) {
+  const isDone = app.status === 'accepted' || app.status === 'rejected'
   return (
     <div className={`app-status-card status-${app.status}`}>
       <div className="app-status-card-left">
@@ -373,6 +352,15 @@ function ApplicationStatusCard({ app }) {
           <Link to="/messages" className="app-message-btn">
             Message →
           </Link>
+        )}
+        {isDone && (
+          <button
+            className="app-dismiss-btn"
+            onClick={() => onDelete(app.id)}
+            aria-label="Dismiss application"
+          >
+            ×
+          </button>
         )}
       </div>
     </div>
