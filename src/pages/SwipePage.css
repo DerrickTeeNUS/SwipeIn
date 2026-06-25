@@ -54,12 +54,54 @@
 }
 
 /* Swipe area */
+.swipe-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 12px 16px 0;
+  align-items: flex-end;
+}
+
+.swipe-filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+  color: var(--text);
+  min-width: 120px;
+  flex: 1;
+}
+
+.swipe-filter-field span {
+  font-weight: 600;
+}
+
+.swipe-filter-field input,
+.swipe-filter-field select {
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 13px;
+  background: var(--bg);
+  color: var(--text-h);
+}
+
+.swipe-filter-clear {
+  border: 1px solid var(--border);
+  background: white;
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 13px;
+  color: var(--text-h);
+  cursor: pointer;
+}
+
 .swipe-area {
   flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px 20px 8px;
+  padding: 16px 20px 8px;
   overflow: hidden;
 }
 
@@ -428,6 +470,12 @@
   flex-shrink: 0;
 }
 
+.match-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
 .match-action-btn {
   width: 100%;
   padding: 13px;
@@ -440,6 +488,12 @@
   font-family: var(--sans);
   cursor: pointer;
   transition: opacity 0.15s;
+}
+
+.match-action-secondary {
+  background: white;
+  color: var(--text-h);
+  border: 1px solid var(--border);
 }
 
 .match-action-btn:hover {

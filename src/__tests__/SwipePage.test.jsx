@@ -116,6 +116,27 @@ describe('SwipePage', () => {
     expect(screen.queryByText('Already Swiped')).not.toBeInTheDocument()
   })
 
+  it('filters the feed by industry and location for student users', async () => {
+    getDocs
+      .mockResolvedValueOnce({
+        docs: [
+          makeDoc('prof-1', { displayName: 'Maya Patel', role: 'professional', location: 'New York', industry: 'technology' }),
+          makeDoc('prof-2', { displayName: 'Chris Lee', role: 'professional', location: 'Boston', industry: 'finance' }),
+        ],
+      })
+      .mockResolvedValueOnce({ docs: [] })
+
+    renderSwipe()
+    expect(await screen.findByText('Maya Patel')).toBeInTheDocument()
+
+    fireEvent.change(screen.getByLabelText(/industry/i), { target: { value: 'technology' } })
+    fireEvent.change(screen.getByLabelText(/location/i), { target: { value: 'new york' } })
+
+    await waitFor(() => {
+      expect(screen.queryByText('Chris Lee')).not.toBeInTheDocument()
+    })
+  })
+
   it('shows the match modal when a mutual like is detected', async () => {
     getDocs
       .mockResolvedValueOnce({ docs: [makeDoc('prof-1', { displayName: 'Alex Kim', role: 'professional' })] })
