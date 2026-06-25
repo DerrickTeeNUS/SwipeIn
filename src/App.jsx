@@ -7,6 +7,7 @@ import StudentProfilePage from './pages/StudentProfilePage'
 import ProfessionalProfilePage from './pages/ProfessionalProfilePage'
 import SwipePage from './pages/SwipePage'
 import MessagesPage from './pages/MessagesPage'
+import OpportunitiesPage from './pages/OpportunitiesPage'
 
 function App() {
   return (
@@ -21,6 +22,7 @@ function App() {
         <Route path="/professional/:uid" element={<ProfessionalProfilePage />} />
         <Route path="/swipe" element={<SwipePage />} />
         <Route path="/messages" element={<MessagesPage />} />
+        <Route path="/opportunities" element={<OpportunitiesPage />} />
       </Routes>
     </BrowserRouter>
   )
