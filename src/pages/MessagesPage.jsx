@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import { onAuthStateChanged } from 'firebase/auth'
 import {
   addDoc,
@@ -15,6 +15,7 @@ import {
   setDoc,
   where,
 } from 'firebase/firestore'
+import { doc, getDoc } from 'firebase/firestore'
 import { auth, db } from '../firebase'
 import './MessagesPage.css'
 
@@ -67,10 +68,10 @@ function mergeMessages(serverMessages, localMessages) {
 
 function MessagesPage() {
   const navigate = useNavigate()
-  const [currentUser, setCurrentUser] = useState(null)
+  const [user, setUser] = useState(null)
+  const [userRole, setUserRole] = useState('')
   const [conversations, setConversations] = useState([])
   const [activeConversationId, setActiveConversationId] = useState('')
-  const [messages, setMessages] = useState([])
   const [draft, setDraft] = useState('')
   const [loading, setLoading] = useState(true)
   const [sending, setSending] = useState(false)
@@ -88,12 +89,14 @@ function MessagesPage() {
         return
       }
 
+      setUser(firebaseUser)
+
       try {
-        const userSnap = await getDoc(doc(db, 'users', firebaseUser.uid))
-        const userData = userSnap.exists() ? userSnap.data() : {}
-        setCurrentUser({ ...userData, uid: firebaseUser.uid })
-      } catch (err) {
-        console.error('User load error:', err)
+        const snap = await getDoc(doc(db, 'users', firebaseUser.uid))
+        const role = snap.exists() ? snap.data().role || '' : ''
+        setUserRole(role)
+      } catch {
+        setUserRole('')
       }
     })
 
@@ -248,22 +251,47 @@ function MessagesPage() {
         }
       }),
     )
+    if (!user?.uid) return
 
-    const sortedConversations = loadedConversations.sort((a, b) => {
-      const timeA = a.updatedAt?.getTime() || 0
-      const timeB = b.updatedAt?.getTime() || 0
-      return timeB - timeA
-    })
+    const storageKey = `swipein-inbox-${user.uid}`
+    const savedInbox = window.localStorage.getItem(storageKey)
 
-    setConversations(sortedConversations)
-    if (selectedId && sortedConversations.some((conversation) => conversation.id === selectedId)) {
-      setActiveConversationId(selectedId)
-    } else if (sortedConversations[0]) {
-      setActiveConversationId(sortedConversations[0].id)
+    if (savedInbox) {
+      const parsed = JSON.parse(savedInbox)
+      setConversations(parsed)
+      if (parsed[0]) setActiveConversationId(parsed[0].id)
+    } else {
+      const starterConversations = [
+        {
+          id: 'match-1',
+          name: userRole === 'professional' ? 'Ava Chen' : 'Maya Patel',
+          role: userRole === 'professional' ? 'Intern' : 'Hirer',
+          messages: [
+            {
+              id: 'msg-1',
+              sender: 'them',
+              text: userRole === 'professional'
+                ? 'Hi! I’m really excited about the opportunity and would love to connect.'
+                : 'Hi! I’m interested in learning more about your team and the internship role.',
+            },
+          ],
+        },
+      ]
+
+      setConversations(starterConversations)
+      setActiveConversationId(starterConversations[0].id)
+      window.localStorage.setItem(storageKey, JSON.stringify(starterConversations))
     }
-  }
 
-  const handleSend = async (event) => {
+    setLoading(false)
+  }, [user?.uid, userRole])
+
+  const activeConversation = useMemo(
+    () => conversations.find((conversation) => conversation.id === activeConversationId) || null,
+    [activeConversationId, conversations],
+  )
+
+  const handleSend = (event) => {
     event.preventDefault()
     if (!draft.trim() || !activeConversationId || !currentUser?.uid || sending) return
 
@@ -311,21 +339,35 @@ function MessagesPage() {
       setSending(false)
     }
   }
+    if (!draft.trim() || !activeConversation || !user?.uid) return
 
-  const formatTime = (value) => {
-    if (!value) return ''
-    if (typeof value?.toDate === 'function') {
-      return value.toDate().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
-    }
-    return ''
+    const nextConversations = conversations.map((conversation) => {
+      if (conversation.id !== activeConversation.id) return conversation
+
+      return {
+        ...conversation,
+        messages: [
+          ...conversation.messages,
+          {
+            id: `${Date.now()}`,
+            sender: 'me',
+            text: draft.trim(),
+          },
+        ],
+      }
+    })
+
+    setConversations(nextConversations)
+    window.localStorage.setItem(`swipein-inbox-${user.uid}`, JSON.stringify(nextConversations))
+    setDraft('')
   }
 
   if (loading) {
     return (
       <div className="messages-page">
-        <div className="messages-card loading-card">
-          <p className="eyebrow">Intro messaging</p>
-          <h1>Loading your conversations…</h1>
+        <div className="messages-card">
+          <p className="eyebrow">Inbox</p>
+          <h1>Loading your messages…</h1>
         </div>
       </div>
     )
@@ -334,81 +376,54 @@ function MessagesPage() {
   return (
     <div className="messages-page">
       <div className="messages-shell">
-        <aside className="conversation-list">
-          <div className="list-header">
+        <aside className="inbox-list">
+          <div className="messages-header">
             <div>
-              <p className="eyebrow">Intro messaging</p>
-              <h1>Conversations</h1>
+              <p className="eyebrow">Inbox</p>
+              <h1>Messages</h1>
             </div>
-            <Link to="/home" className="ghost-link">
-              Back
-            </Link>
+            <button type="button" className="back-button" onClick={() => navigate('/home')}>
+              ← Back
+            </button>
           </div>
 
-          {conversations.length === 0 ? (
-            <div className="empty-state">
-              <h2>No conversations yet</h2>
-              <p>Swipe to create a match, then open a friendly intro.</p>
-              <Link to="/swipe" className="primary-button message-button">
-                Start swiping
-              </Link>
-            </div>
-          ) : (
-            conversations.map((conversation) => (
-              <button
-                key={conversation.id}
-                className={`conversation-item${conversation.id === activeConversationId ? ' active' : ''}`}
-                onClick={() => setActiveConversationId(conversation.id)}
-                type="button"
-              >
-                <div className="conversation-meta">
-                  <span className="conversation-name">{conversation.partnerName}</span>
-                  <span className="conversation-role">{conversation.partnerRole === 'professional' ? 'Recruiter' : 'Student'}</span>
-                </div>
-                <p className="conversation-preview">{conversation.preview}</p>
-              </button>
-            ))
-          )}
+          {conversations.map((conversation) => (
+            <button
+              key={conversation.id}
+              type="button"
+              className={`conversation-item${conversation.id === activeConversationId ? ' active' : ''}`}
+              onClick={() => setActiveConversationId(conversation.id)}
+            >
+              <strong>{conversation.name}</strong>
+              <span>{conversation.role}</span>
+              <p>{conversation.messages[conversation.messages.length - 1]?.text}</p>
+            </button>
+          ))}
         </aside>
 
-        <section className="conversation-panel">
+        <section className="messages-card inbox-thread">
           {activeConversation ? (
             <>
-              <header className="panel-header">
+              <div className="messages-header">
                 <div>
-                  <p className="eyebrow">{activeConversation.partnerRole === 'professional' ? 'Professional' : 'Student'}</p>
-                  <h2>{activeConversation.partnerName}</h2>
+                  <p className="eyebrow">Matched conversation</p>
+                  <h2>{activeConversation.name}</h2>
                 </div>
-                <Link to="/swipe" className="ghost-link">
-                  Find more
-                </Link>
-              </header>
-
-              <div className="message-list">
-                {messages.length === 0 ? (
-                  <div className="empty-chat">
-                    <h3>Start with a friendly intro</h3>
-                    <p>Share a short note and make your first connection feel warm and personal.</p>
-                  </div>
-                ) : (
-                  messages.map((message) => {
-                    const isMine = message.senderId === currentUser?.uid
-                    return (
-                      <div key={message.id} className={`message-row${isMine ? ' mine' : ''}`}>
-                        <div className={`message-bubble${isMine ? ' mine' : ''}`}>
-                          <p>{message.text}</p>
-                          <span>{formatTime(message.createdAt)}</span>
-                        </div>
-                      </div>
-                    )
-                  })
-                )}
               </div>
 
-              <form className="composer" onSubmit={handleSend}>
+              <div className="message-thread">
+                {activeConversation.messages.map((message) => (
+                  <div key={message.id} className={`message-bubble ${message.sender === 'me' ? 'mine' : 'theirs'}`}>
+                    <p>{message.text}</p>
+                  </div>
+                ))}
+              </div>
+
+              <form className="message-form" onSubmit={handleSend}>
                 <textarea
                   value={draft}
                   onChange={(event) => setDraft(event.target.value)}
+                  placeholder="Write a message to start or continue the conversation"
                   rows={4}
                   placeholder="Send a message"
                 />
@@ -416,12 +431,14 @@ function MessagesPage() {
                 <button className="primary-button" type="submit" disabled={sending}>
                   {sending ? 'Sending…' : 'Send message'}
                 </button>
+                />
+                <button type="submit" className="primary-button">Send message</button>
               </form>
             </>
           ) : (
-            <div className="empty-chat">
-              <h3>No match selected</h3>
-              <p>Choose a conversation from the left to begin your intro.</p>
+            <div className="empty-state">
+              <h2>No conversations yet</h2>
+              <p>Once you match with someone, they’ll appear here.</p>
             </div>
           )}
         </section>
