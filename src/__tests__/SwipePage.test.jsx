@@ -129,7 +129,8 @@ describe('SwipePage', () => {
     renderSwipe()
     expect(await screen.findByText('Maya Patel')).toBeInTheDocument()
 
-    fireEvent.change(screen.getByLabelText(/industry/i), { target: { value: 'technology' } })
+    const industryInput = screen.getByLabelText(/industry/i)
+    fireEvent.change(industryInput, { target: { value: 'technology' } })
     fireEvent.change(screen.getByLabelText(/location/i), { target: { value: 'new york' } })
 
     await waitFor(() => {
