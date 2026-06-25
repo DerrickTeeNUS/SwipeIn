@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { onAuthStateChanged } from 'firebase/auth'
 import {
-  collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc,
+  collection, doc, getDoc, getDocs, addDoc, updateDoc, deleteDoc, setDoc,
   query, where, serverTimestamp,
 } from 'firebase/firestore'
 import { auth, db } from '../firebase'
@@ -202,6 +202,20 @@ function OpportunitiesPage() {
     try {
       await updateDoc(doc(db, 'applications', appId), { status })
       setApplications(prev => prev.map(a => a.id === appId ? { ...a, status } : a))
+
+      if (status === 'accepted') {
+        const app = applications.find(a => a.id === appId)
+        if (app) {
+          const matchId = [uid, app.studentId].sort().join('_')
+          await setDoc(doc(db, 'matches', matchId), {
+            users: [uid, app.studentId],
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+            lastMessage: '',
+            lastMessageAt: null,
+          }, { merge: true })
+        }
+      }
     } catch {
       // ignore
     }

@@ -17,6 +17,7 @@ function HomePage() {
   // Student feed state
   const [opportunities, setOpportunities] = useState([])
   const [appliedIds, setAppliedIds] = useState(new Set())
+  const [myApplications, setMyApplications] = useState([])
   const [feedLoading, setFeedLoading] = useState(false)
 
   // Apply modal state
@@ -57,7 +58,9 @@ function HomePage() {
         getDocs(query(collection(db, 'applications'), where('studentId', '==', uid))),
       ])
       setOpportunities(oppSnap.docs.map(d => ({ id: d.id, ...d.data() })))
-      setAppliedIds(new Set(appSnap.docs.map(d => d.data().opportunityId)))
+      const apps = appSnap.docs.map(d => ({ id: d.id, ...d.data() }))
+      setMyApplications(apps)
+      setAppliedIds(new Set(apps.map(a => a.opportunityId)))
     } catch {
       // feed stays empty
     } finally {
@@ -70,9 +73,12 @@ function HomePage() {
     setApplying(true)
     setApplyError('')
     try {
-      await addDoc(collection(db, 'applications'), {
+      const newApp = {
         opportunityId: applyModal.id,
         opportunityTitle: applyModal.title,
+        professionalId: applyModal.professionalId || '',
+        professionalName: applyModal.professionalName || '',
+        company: applyModal.company || '',
         studentId: user.uid,
         studentName: user.displayName || '',
         studentPhotoURL: userProfile?.photoURL || '',
@@ -84,8 +90,10 @@ function HomePage() {
         message: applyMessage.trim(),
         status: 'pending',
         createdAt: serverTimestamp(),
-      })
+      }
+      const ref = await addDoc(collection(db, 'applications'), newApp)
       setAppliedIds(prev => new Set([...prev, applyModal.id]))
+      setMyApplications(prev => [{ id: ref.id, ...newApp }, ...prev])
       setApplyModal(null)
       setApplyMessage('')
     } catch (err) {
@@ -142,7 +150,7 @@ function HomePage() {
         </div>
       </header>
 
-      {/* STUDENT: opportunities feed */}
+      {/* STUDENT: my applications + feed */}
       {userRole === 'student' && (
         <>
           <div style={{ maxWidth: 1120, margin: '0 auto 24px' }}>
@@ -168,6 +176,19 @@ function HomePage() {
             </Link>
           </div>
 
+          {/* MY APPLICATIONS */}
+          {myApplications.length > 0 && (
+            <section className="my-apps-section">
+              <h2 className="feed-heading">My applications</h2>
+              <div className="my-apps-list">
+                {myApplications.map(app => (
+                  <ApplicationStatusCard key={app.id} app={app} />
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* OPPORTUNITIES FEED */}
           <section className="feed-section">
             <h2 className="feed-heading">Opportunities for you</h2>
 
@@ -334,6 +355,27 @@ function HomePage() {
         </div>
       )}
     </main>
+  )
+}
+
+function ApplicationStatusCard({ app }) {
+  return (
+    <div className={`app-status-card status-${app.status}`}>
+      <div className="app-status-card-left">
+        <p className="app-status-title">{app.opportunityTitle}</p>
+        <p className="app-status-meta">
+          {[app.company, app.professionalName].filter(Boolean).join(' · ')}
+        </p>
+      </div>
+      <div className="app-status-card-right">
+        <span className={`app-status-pill ${app.status}`}>{app.status}</span>
+        {app.status === 'accepted' && (
+          <Link to="/messages" className="app-message-btn">
+            Message →
+          </Link>
+        )}
+      </div>
+    </div>
   )
 }
 

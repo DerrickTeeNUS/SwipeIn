@@ -1,3 +1,89 @@
+/* My applications section */
+.my-apps-section {
+  max-width: 680px;
+  margin: 0 auto 32px;
+}
+
+.my-apps-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.app-status-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 20px;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: var(--shadow);
+  border-left: 4px solid transparent;
+}
+
+.app-status-card.status-pending  { border-left-color: #f59e0b; }
+.app-status-card.status-accepted { border-left-color: #22c55e; }
+.app-status-card.status-rejected { border-left-color: #ef4444; }
+
+.app-status-card-left {
+  min-width: 0;
+  flex: 1;
+}
+
+.app-status-title {
+  font-weight: 700;
+  color: var(--text-h);
+  font-size: 0.95rem;
+  margin: 0 0 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.app-status-meta {
+  font-size: 0.82rem;
+  color: var(--text);
+  margin: 0;
+}
+
+.app-status-card-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.app-status-pill {
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: capitalize;
+  white-space: nowrap;
+}
+
+.app-status-pill.pending  { background: #fef3c7; color: #92400e; }
+.app-status-pill.accepted { background: #dcfce7; color: #166534; }
+.app-status-pill.rejected { background: #fee2e2; color: #991b1b; }
+
+.app-message-btn {
+  padding: 6px 16px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #6d4bff 0%, #3e3dc2 100%);
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.app-message-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(109, 75, 255, 0.3);
+}
+
 /* Student opportunities feed */
 .feed-section {
   max-width: 680px;
