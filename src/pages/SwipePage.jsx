@@ -68,7 +68,10 @@ export default function SwipePage() {
           await setDoc(doc(db, 'matches', matchId), {
             users: [currentUser.uid, profile.uid],
             createdAt: serverTimestamp(),
-          })
+            updatedAt: serverTimestamp(),
+            lastMessage: '',
+            lastMessageAt: null,
+          }, { merge: true })
           setMatchedProfile(profile)
         }
       }
@@ -317,6 +320,7 @@ const SwipeCard = forwardRef(function SwipeCard({ profile, stackIndex, onDragSwi
 // ─── Match Modal ─────────────────────────────────────────────────────────────
 
 function MatchModal({ currentUser, matched, onClose }) {
+  const navigate = useNavigate()
   const currentInitials = currentUser.displayName
     ? currentUser.displayName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
     : '?'
@@ -342,7 +346,15 @@ function MatchModal({ currentUser, matched, onClose }) {
               : <span>{matchedInitials}</span>}
           </div>
         </div>
-        <button className="match-action-btn" onClick={onClose}>Keep swiping</button>
+        <button
+          className="match-action-btn"
+          onClick={() => {
+            onClose()
+            navigate('/messages')
+          }}
+        >
+          Start chatting
+        </button>
       </div>
     </div>
   )
