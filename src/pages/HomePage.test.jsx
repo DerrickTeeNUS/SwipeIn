@@ -206,19 +206,25 @@ describe('HomePage', () => {
   it('renders opportunity cards in the feed when opportunities exist', async () => {
     onAuthStateChanged.mockImplementation((_auth, cb) => { cb({ uid: 'u1', displayName: 'Alice' }); return vi.fn() })
     getDoc.mockResolvedValue({ exists: () => true, data: () => ({ role: 'student' }) })
-    getDocs.mockResolvedValueOnce({
-      docs: [{
-        id: 'opp-1',
-        data: () => ({
-          title: 'Summer Software Intern',
-          type: 'internship',
-          description: 'Join our engineering team.',
-          professionalName: 'Bob Smith',
-          company: 'Acme Corp',
-          isPaid: true,
-        }),
-      }],
-    }).mockResolvedValueOnce({ docs: [] }) // applications query
+    // loadFeed calls Promise.all([getDocs(matches), getDocs(applications)]) then
+    // getDocs(opportunities) only when there are matched professionals.
+    getDocs
+      .mockResolvedValueOnce({ docs: [{ id: 'match-1', data: () => ({ users: ['u1', 'pro-1'] }) }] }) // matches
+      .mockResolvedValueOnce({ docs: [] }) // applications
+      .mockResolvedValueOnce({
+        docs: [{
+          id: 'opp-1',
+          data: () => ({
+            title: 'Summer Software Intern',
+            type: 'internship',
+            description: 'Join our engineering team.',
+            professionalName: 'Bob Smith',
+            company: 'Acme Corp',
+            isPaid: true,
+            professionalId: 'pro-1',
+          }),
+        }],
+      }) // opportunities
 
     renderHomePage()
 
@@ -232,12 +238,20 @@ describe('HomePage', () => {
     onAuthStateChanged.mockImplementation((_auth, cb) => { cb({ uid: 'u1', displayName: 'Alice' }); return vi.fn() })
     getDoc.mockResolvedValue({ exists: () => true, data: () => ({ role: 'student' }) })
     getDocs
+      .mockResolvedValueOnce({ docs: [{ id: 'match-1', data: () => ({ users: ['u1', 'pro-1'] }) }] }) // matches
+      .mockResolvedValueOnce({ docs: [{ id: 'app-1', data: () => ({ opportunityId: 'opp-1' }) }] }) // applications
       .mockResolvedValueOnce({
-        docs: [{ id: 'opp-1', data: () => ({ title: 'UX Mentorship', type: 'mentorship', description: 'Design mentorship.', professionalName: 'Jane' }) }],
-      })
-      .mockResolvedValueOnce({
-        docs: [{ data: () => ({ opportunityId: 'opp-1' }) }],
-      })
+        docs: [{
+          id: 'opp-1',
+          data: () => ({
+            title: 'UX Mentorship',
+            type: 'mentorship',
+            description: 'Design mentorship.',
+            professionalName: 'Jane',
+            professionalId: 'pro-1',
+          }),
+        }],
+      }) // opportunities
 
     renderHomePage()
 
