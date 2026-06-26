@@ -1,7 +1,6 @@
 .sp-page {
   flex: 1;
   padding: 32px 24px 64px;
-  background: linear-gradient(180deg, #f7f6ff 0%, #ffffff 60%);
 }
 
 .sp-loading,
@@ -264,6 +263,7 @@
   font-weight: 500;
   color: var(--accent);
 }
+
 
 /* Responsive */
 @media (max-width: 600px) {

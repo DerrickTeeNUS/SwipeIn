@@ -3,7 +3,6 @@
   flex-direction: column;
   height: 100svh;
   overflow: hidden;
-  background: linear-gradient(160deg, #f7f6ff 0%, #fff 60%);
 }
 
 .swipe-loading {
@@ -498,4 +497,20 @@
 
 .match-action-btn:hover {
   opacity: 0.88;
+}
+
+@media (prefers-color-scheme: dark) {
+  .swipe-filter-clear {
+    background: #1e2028;
+    color: var(--text-h);
+    border-color: var(--border);
+  }
+
+  .pass-btn {
+    background: #1e2028;
+  }
+
+  .match-action-secondary {
+    background: #1e2028;
+  }
 }

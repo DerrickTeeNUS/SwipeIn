@@ -1,7 +1,6 @@
 .opp-page {
   min-height: 100svh;
   padding: 32px 24px;
-  background: linear-gradient(180deg, #f7f6ff 0%, #ffffff 100%);
 }
 
 .opp-loading {
@@ -647,4 +646,94 @@
   .modal-sheet { padding: 24px 20px; }
   .apps-filters { flex-direction: column; }
   .filter-group { min-width: unset; }
+}
+
+@media (prefers-color-scheme: dark) {
+  .opp-row {
+    background: #1e2028;
+  }
+
+  .app-card {
+    background: #1e2028;
+  }
+
+  .type-badge.internship { background: rgba(59, 130, 246, 0.2);  color: #93c5fd; }
+  .type-badge.mentorship { background: rgba(236, 72, 153, 0.2);  color: #f9a8d4; }
+
+  .app-count-chip {
+    background: rgba(192, 132, 252, 0.15);
+    color: var(--accent);
+  }
+
+  .tab-badge {
+    background: #2e303a;
+    color: var(--accent);
+  }
+
+  .opp-tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+
+  .opp-tab.active .tab-badge {
+    background: var(--accent);
+    color: #0f1016;
+  }
+
+  .status-pill.pending  { background: rgba(245, 158, 11, 0.2);  color: #fcd34d; }
+  .status-pill.accepted { background: rgba(34, 197, 94, 0.2);   color: #86efac; }
+  .status-pill.rejected { background: rgba(239, 68, 68, 0.2);   color: #fca5a5; }
+
+  .app-message-box {
+    background: rgba(192, 132, 252, 0.08);
+    border-left-color: var(--accent-border);
+  }
+
+  .app-message-label {
+    color: var(--accent);
+  }
+
+  .modal-sheet {
+    background: #1e2028;
+  }
+
+  .modal-close-btn {
+    background: #2e303a;
+  }
+
+  .modal-close-btn:hover {
+    background: #3a3c47;
+  }
+
+  .opp-form .form-group label {
+    color: var(--text);
+  }
+
+  .opp-form .form-group input,
+  .opp-form .form-group textarea,
+  .opp-form .form-group select {
+    background: #1a1b22;
+    border-color: var(--border);
+    color: var(--text-h);
+  }
+
+  .opp-form .form-group input:focus,
+  .opp-form .form-group textarea:focus,
+  .opp-form .form-group select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-bg);
+  }
+
+  .skills-container {
+    background: #1a1b22;
+    border-color: var(--border);
+  }
+
+  .skills-container:focus-within {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-bg);
+  }
+
+  .ghost-btn:hover        { background: rgba(192, 132, 252, 0.1); }
+  .ghost-btn.danger:hover { background: rgba(239, 68, 68, 0.1); }
 }

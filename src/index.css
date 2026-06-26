@@ -15,11 +15,11 @@
   --heading: system-ui, 'Segoe UI', Roboto, sans-serif;
   --mono: ui-monospace, Consolas, monospace;
 
-  font: 18px/145% var(--sans);
+  font: 18px/1.45 var(--sans);
   letter-spacing: 0.18px;
   color-scheme: light dark;
   color: var(--text);
-  background: var(--bg);
+  background: linear-gradient(180deg, #f7f6ff 0%, #ffffff 100%);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -43,6 +43,7 @@
     --social-bg: rgba(47, 48, 58, 0.5);
     --shadow:
       rgba(0, 0, 0, 0.4) 0 10px 15px -3px, rgba(0, 0, 0, 0.25) 0 4px 6px -2px;
+    background: linear-gradient(180deg, #0f1016 0%, #16171d 100%);
   }
 
   #social .button-icon {
@@ -59,8 +60,7 @@ body {
   max-width: 100%;
   margin: 0 auto;
   text-align: center;
-  border-inline: 1px solid var(--border);
-  min-height: 100svh;
+min-height: 100svh;
   display: flex;
   flex-direction: column;
   box-sizing: border-box;
@@ -115,7 +115,6 @@ code {
   display: grid;
   place-items: center;
   padding: 24px;
-  background: linear-gradient(180deg, #f7f6ff 0%, #ffffff 55%, #f4f5ff 100%);
 }
 
 .login-hero {
@@ -266,7 +265,6 @@ code {
 .home-page {
   min-height: 100svh;
   padding: 32px 24px;
-  background: linear-gradient(180deg, #f7f6ff 0%, #ffffff 100%);
 }
 
 .home-header {
@@ -397,5 +395,75 @@ code {
 
   .role-options {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .brand-pill {
+    background: rgba(192, 132, 252, 0.12);
+    color: #c084fc;
+  }
+
+  .eyebrow {
+    color: #a78bfa;
+  }
+
+  .hero-text {
+    color: var(--text);
+  }
+
+  .hero-features > div {
+    background: rgba(31, 32, 40, 0.9);
+  }
+
+  .login-card {
+    background: #1e2028;
+    border-color: rgba(192, 132, 252, 0.14);
+  }
+
+  .login-card-head p {
+    color: var(--text);
+  }
+
+  .form-group label {
+    color: var(--text);
+  }
+
+  .form-group input {
+    background: #1a1b22;
+    border-color: var(--border);
+    color: var(--text-h);
+  }
+
+  .form-group input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 4px var(--accent-bg);
+  }
+
+  .role-options button {
+    background: #1e2028;
+    border-color: var(--border);
+    color: #a78bfa;
+  }
+
+  .secondary-button {
+    background: #1e2028;
+    color: #a78bfa;
+  }
+
+  .home-card {
+    background: #1e2028;
+  }
+
+  .home-card p {
+    color: var(--text);
+  }
+
+  .signup-note {
+    color: var(--text);
+  }
+
+  .signup-note a {
+    color: var(--accent);
   }
 }

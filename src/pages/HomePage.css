@@ -1,3 +1,98 @@
+/* Header nav links */
+.home-nav {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  flex-shrink: 0;
+}
+
+.home-nav-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 0.9rem;
+  font-family: var(--sans);
+  font-weight: 500;
+  color: var(--text);
+  text-decoration: none;
+  cursor: pointer;
+  transition: color 0.15s;
+  white-space: nowrap;
+}
+
+.home-nav-link:hover {
+  color: var(--accent);
+}
+
+.home-nav-signout {
+  color: #ef4444;
+}
+
+.home-nav-signout:hover {
+  color: #dc2626;
+}
+
+/* Swipe CTA banner */
+.swipe-cta-wrap {
+  max-width: 680px;
+  margin: 0 auto 24px;
+}
+
+.swipe-cta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 20px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #6d4bff 0%, #aa3bff 100%);
+  color: #fff;
+  text-decoration: none;
+  box-shadow: 0 4px 18px rgba(109, 75, 255, 0.3);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.swipe-cta:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 28px rgba(109, 75, 255, 0.4);
+}
+
+.swipe-cta-label {
+  font-weight: 700;
+  font-size: 0.95rem;
+  white-space: nowrap;
+}
+
+.swipe-cta-sub {
+  font-size: 0.88rem;
+  opacity: 0.85;
+  flex: 1;
+}
+
+.swipe-cta-arrow {
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.swipe-cta--secondary {
+  background: var(--bg);
+  color: var(--accent);
+  box-shadow: var(--shadow);
+}
+
+.swipe-cta--secondary:hover {
+  box-shadow: var(--shadow);
+  transform: translateY(-1px);
+}
+
+.prof-cta-wrap {
+  max-width: 680px;
+  margin: 0 auto 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
 /* My applications section */
 .my-apps-section {
   max-width: 680px;
@@ -66,6 +161,24 @@
 .app-status-pill.pending  { background: #fef3c7; color: #92400e; }
 .app-status-pill.accepted { background: #dcfce7; color: #166534; }
 .app-status-pill.rejected { background: #fee2e2; color: #991b1b; }
+
+.app-dismiss-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.1rem;
+  line-height: 1;
+  color: var(--text);
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: color 0.15s, background-color 0.15s;
+  flex-shrink: 0;
+}
+
+.app-dismiss-btn:hover {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.08);
+}
 
 .app-message-btn {
   padding: 6px 16px;
@@ -501,5 +614,82 @@
 @media (max-width: 640px) {
   .feed-section {
     padding: 0 0 48px;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .app-status-card {
+    background: #1e2028;
+  }
+
+  .app-status-pill.pending  { background: rgba(245, 158, 11, 0.2);  color: #fcd34d; }
+  .app-status-pill.accepted { background: rgba(34, 197, 94, 0.2);   color: #86efac; }
+  .app-status-pill.rejected { background: rgba(239, 68, 68, 0.2);   color: #fca5a5; }
+
+  .opp-post-card {
+    background: #1e2028;
+  }
+
+  .meta-chip {
+    background: #2e303a;
+    color: var(--text-h);
+  }
+
+  .deadline-chip {
+    background: rgba(245, 158, 11, 0.2);
+    color: #fcd34d;
+  }
+
+  .applied-badge {
+    background: rgba(34, 197, 94, 0.2);
+    color: #86efac;
+  }
+
+  .type-badge.internship { background: rgba(59, 130, 246, 0.2);  color: #93c5fd; }
+  .type-badge.mentorship { background: rgba(236, 72, 153, 0.2);  color: #f9a8d4; }
+
+  .apply-sheet {
+    background: #1e2028;
+    box-shadow: 0 -8px 40px rgba(0, 0, 0, 0.5);
+  }
+
+  .apply-sheet-eyebrow {
+    color: var(--accent);
+  }
+
+  .apply-close-btn {
+    background: #2e303a;
+  }
+
+  .apply-close-btn:hover {
+    background: #3a3c47;
+  }
+
+  .apply-form-group label {
+    color: var(--text);
+  }
+
+  .apply-form-group textarea {
+    background: #1a1b22;
+    border-color: var(--border);
+    color: var(--text-h);
+  }
+
+  .apply-form-group textarea:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-bg);
+  }
+
+  .apply-cancel-btn:hover {
+    background: rgba(192, 132, 252, 0.1);
+  }
+
+  .feed-spinner {
+    border-color: #2e303a;
+    border-top-color: var(--accent);
+  }
+
+  .expand-btn {
+    color: var(--accent);
   }
 }

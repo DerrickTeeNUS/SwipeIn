@@ -1,7 +1,6 @@
 .messages-page {
   min-height: 100svh;
   padding: 24px;
-  background: linear-gradient(180deg, #f7f6ff 0%, #ffffff 100%);
 }
 
 .messages-shell {
@@ -32,6 +31,12 @@
   gap: 16px;
   align-items: start;
   margin-bottom: 20px;
+}
+
+.inbox-list h1 {
+  font-size: 1.3rem;
+  letter-spacing: -0.3px;
+  margin: 0;
 }
 
 .back-button {
@@ -159,5 +164,46 @@
 
   .messages-header {
     flex-direction: column;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .messages-card {
+    background: #1e2028;
+    border-color: rgba(192, 132, 252, 0.12);
+    box-shadow: 0 16px 45px rgba(0, 0, 0, 0.3);
+  }
+
+  .back-button {
+    background: rgba(192, 132, 252, 0.15);
+    color: var(--accent);
+  }
+
+  .conversation-item {
+    background: #1a1b23;
+    border-color: var(--border);
+  }
+
+  .conversation-item strong {
+    color: var(--text-h);
+  }
+
+  .conversation-item p {
+    color: var(--text);
+  }
+
+  .message-bubble.theirs {
+    background: #252032;
+    color: var(--text-h);
+  }
+
+  .message-form textarea {
+    background: #1a1b22;
+    border-color: var(--border);
+    color: var(--text-h);
+  }
+
+  .empty-state {
+    color: var(--text);
   }
 }
