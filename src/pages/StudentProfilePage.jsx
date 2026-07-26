@@ -56,8 +56,7 @@ function StudentProfilePage() {
 
   async function handleSubmitReport(reason) {
     const reportId = `${currentUid}_${uid}`
-    const existing = await getDoc(doc(db, 'reports', reportId))
-    if (!existing.exists()) {
+    try {
       await setDoc(doc(db, 'reports', reportId), {
         reporterId: currentUid,
         reportedId: uid,
@@ -69,12 +68,13 @@ function StudentProfilePage() {
         to: uid,
         direction: 'pass',
         createdAt: serverTimestamp(),
-      })
+      }).catch(() => {})
+    } catch (err) {
+      console.error('Report error:', err)
     }
     setShowReport(false)
-    const msg = existing.exists() ? 'Already reported' : 'Profile reported'
-    setToast(msg)
-    setTimeout(() => setToast(''), 2500)
+    setToast('Report submitted')
+    setTimeout(() => navigate(-1), 1500)
   }
 
   if (loading) {

@@ -285,9 +285,7 @@ describe('ProfessionalProfilePage', () => {
   })
 
   it('writes a report document and a pass-swipe to Firestore on submission', async () => {
-    getDoc
-      .mockResolvedValueOnce({ exists: () => true, data: () => PROFESSIONAL_PROFILE }) // profile load
-      .mockResolvedValueOnce({ exists: () => false }) // report check: not yet reported
+    getDoc.mockResolvedValue({ exists: () => true, data: () => PROFESSIONAL_PROFILE })
     setDoc.mockResolvedValue(undefined)
 
     renderPage('pro-1')
@@ -308,10 +306,8 @@ describe('ProfessionalProfilePage', () => {
     )
   })
 
-  it('shows a "Profile reported" toast after a successful first-time report', async () => {
-    getDoc
-      .mockResolvedValueOnce({ exists: () => true, data: () => PROFESSIONAL_PROFILE })
-      .mockResolvedValueOnce({ exists: () => false })
+  it('shows a "Report submitted" toast after submitting', async () => {
+    getDoc.mockResolvedValue({ exists: () => true, data: () => PROFESSIONAL_PROFILE })
     setDoc.mockResolvedValue(undefined)
 
     renderPage('pro-1')
@@ -320,32 +316,24 @@ describe('ProfessionalProfilePage', () => {
     fireEvent.click(await screen.findByRole('radio', { name: 'Inappropriate content' }))
     fireEvent.click(screen.getByRole('button', { name: /submit report/i }))
 
-    expect(await screen.findByRole('status')).toHaveTextContent('Profile reported')
+    expect(await screen.findByRole('status')).toHaveTextContent('Report submitted')
   })
 
-  it('shows "Already reported" toast and skips Firestore writes on a duplicate report', async () => {
-    getDoc
-      .mockResolvedValueOnce({ exists: () => true, data: () => PROFESSIONAL_PROFILE })
-      .mockResolvedValueOnce({ exists: () => true, data: () => ({ reporterId: 'viewer-1', reportedId: 'pro-1' }) })
+  it('navigates back after submitting a report', async () => {
+    getDoc.mockResolvedValue({ exists: () => true, data: () => PROFESSIONAL_PROFILE })
     setDoc.mockResolvedValue(undefined)
 
     renderPage('pro-1')
     await screen.findByText('Bob Smith')
     fireEvent.click(screen.getByRole('button', { name: /report/i }))
-    fireEvent.click(await screen.findByRole('radio', { name: 'Other' }))
+    fireEvent.click(await screen.findByRole('radio', { name: 'Inappropriate content' }))
     fireEvent.click(screen.getByRole('button', { name: /submit report/i }))
 
-    expect(await screen.findByRole('status')).toHaveTextContent('Already reported')
-    expect(setDoc).not.toHaveBeenCalledWith(
-      expect.anything(),
-      expect.objectContaining({ reporterId: 'viewer-1' }),
-    )
+    await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith(-1), { timeout: 2000 })
   })
 
   it('closes the ReportModal after submission', async () => {
-    getDoc
-      .mockResolvedValueOnce({ exists: () => true, data: () => PROFESSIONAL_PROFILE })
-      .mockResolvedValueOnce({ exists: () => false })
+    getDoc.mockResolvedValue({ exists: () => true, data: () => PROFESSIONAL_PROFILE })
     setDoc.mockResolvedValue(undefined)
 
     renderPage('pro-1')

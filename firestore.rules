@@ -16,6 +16,10 @@ service cloud.firestore {
                         || resource.data.to  == request.auth.uid);
       allow create: if request.auth != null
                     && request.resource.data.from == request.auth.uid;
+      // Allow overwriting your own swipe (e.g. report replaces an existing pass/like)
+      allow update: if request.auth != null
+                    && resource.data.from == request.auth.uid
+                    && request.resource.data.from == request.auth.uid;
     }
 
     // ── Matches ───────────────────────────────────────────────────────────────
@@ -55,7 +59,7 @@ service cloud.firestore {
       allow create: if request.auth != null
                     && request.resource.data.reporterId == request.auth.uid;
       allow read:   if request.auth != null
-                    && resource.data.reporterId == request.auth.uid;
+                    && (resource == null || resource.data.reporterId == request.auth.uid);
     }
 
     // ── Applications ──────────────────────────────────────────────────────────

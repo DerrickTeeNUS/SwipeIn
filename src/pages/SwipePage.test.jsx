@@ -246,10 +246,6 @@ describe('SwipePage', () => {
       .mockResolvedValueOnce({ docs: [makeDoc('prof-1', { displayName: 'Maya Patel', role: 'professional' })] })
       .mockResolvedValueOnce({ docs: [] })
 
-    getDoc
-      .mockResolvedValueOnce({ exists: () => true, data: () => CURRENT_USER })
-      .mockResolvedValueOnce({ exists: () => false }) // no existing report
-
     renderSwipe()
     await screen.findByText('Maya Patel')
     fireEvent.click(screen.getByRole('button', { name: /report profile/i }))
@@ -273,10 +269,6 @@ describe('SwipePage', () => {
       .mockResolvedValueOnce({ docs: [makeDoc('prof-1', { displayName: 'Maya Patel', role: 'professional' })] })
       .mockResolvedValueOnce({ docs: [] })
 
-    getDoc
-      .mockResolvedValueOnce({ exists: () => true, data: () => CURRENT_USER })
-      .mockResolvedValueOnce({ exists: () => false })
-
     renderSwipe()
     await screen.findByText('Maya Patel')
     fireEvent.click(screen.getByRole('button', { name: /report profile/i }))
@@ -289,14 +281,10 @@ describe('SwipePage', () => {
     expect(await screen.findByText(/you've seen everyone/i)).toBeInTheDocument()
   })
 
-  it('shows a "Profile reported" toast after a successful first-time report', async () => {
+  it('shows a "Profile reported" toast after submission', async () => {
     getDocs
       .mockResolvedValueOnce({ docs: [makeDoc('prof-1', { displayName: 'Maya Patel', role: 'professional' })] })
       .mockResolvedValueOnce({ docs: [] })
-
-    getDoc
-      .mockResolvedValueOnce({ exists: () => true, data: () => CURRENT_USER })
-      .mockResolvedValueOnce({ exists: () => false })
 
     renderSwipe()
     await screen.findByText('Maya Patel')
@@ -307,36 +295,10 @@ describe('SwipePage', () => {
     expect(await screen.findByRole('status')).toHaveTextContent('Profile reported')
   })
 
-  it('shows an "Already reported" toast and skips Firestore writes on a duplicate report', async () => {
-    getDocs
-      .mockResolvedValueOnce({ docs: [makeDoc('prof-1', { displayName: 'Maya Patel', role: 'professional' })] })
-      .mockResolvedValueOnce({ docs: [] })
-
-    getDoc
-      .mockResolvedValueOnce({ exists: () => true, data: () => CURRENT_USER })
-      .mockResolvedValueOnce({ exists: () => true, data: () => ({ reporterId: 'user-1', reportedId: 'prof-1' }) })
-
-    renderSwipe()
-    await screen.findByText('Maya Patel')
-    fireEvent.click(screen.getByRole('button', { name: /report profile/i }))
-    fireEvent.click(await screen.findByRole('radio', { name: 'Other' }))
-    fireEvent.click(screen.getByRole('button', { name: /submit report/i }))
-
-    expect(await screen.findByRole('status')).toHaveTextContent('Already reported')
-    expect(setDoc).not.toHaveBeenCalledWith(
-      expect.anything(),
-      expect.objectContaining({ reporterId: 'user-1' }),
-    )
-  })
-
   it('closes the ReportModal after submission', async () => {
     getDocs
       .mockResolvedValueOnce({ docs: [makeDoc('prof-1', { displayName: 'Maya Patel', role: 'professional' })] })
       .mockResolvedValueOnce({ docs: [] })
-
-    getDoc
-      .mockResolvedValueOnce({ exists: () => true, data: () => CURRENT_USER })
-      .mockResolvedValueOnce({ exists: () => false })
 
     renderSwipe()
     await screen.findByText('Maya Patel')

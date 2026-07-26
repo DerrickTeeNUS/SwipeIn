@@ -17,8 +17,11 @@ export default function ReportModal({ reportedName, onSubmit, onClose }) {
     e.preventDefault()
     if (!reason) return
     setSubmitting(true)
-    await onSubmit(reason)
-    setSubmitting(false)
+    try {
+      await onSubmit(reason)
+    } finally {
+      setSubmitting(false)
+    }
   }
 
   return (

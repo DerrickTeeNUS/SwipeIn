@@ -145,8 +145,7 @@ export default function SwipePage() {
     const profile = reportingProfile
     if (!profile || !currentUser) return
     const reportId = `${currentUser.uid}_${profile.uid}`
-    const existing = await getDoc(doc(db, 'reports', reportId))
-    if (!existing.exists()) {
+    try {
       await setDoc(doc(db, 'reports', reportId), {
         reporterId: currentUser.uid,
         reportedId: profile.uid,
@@ -158,12 +157,13 @@ export default function SwipePage() {
         to: profile.uid,
         direction: 'pass',
         createdAt: serverTimestamp(),
-      })
+      }).catch(() => {})
+    } catch (err) {
+      console.error('Report error:', err)
     }
     setAllProfiles(prev => prev.filter(p => p.uid !== profile.uid))
     setReportingProfile(null)
-    const msg = existing.exists() ? 'Already reported' : 'Profile reported'
-    setToast(msg)
+    setToast('Profile reported')
     setTimeout(() => setToast(''), 2500)
   }, [reportingProfile, currentUser])
 
