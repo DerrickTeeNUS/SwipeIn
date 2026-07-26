@@ -1,0 +1,115 @@
+.report-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 200;
+  padding: 24px;
+  backdrop-filter: blur(4px);
+}
+
+.report-modal {
+  background: var(--bg);
+  border-radius: 20px;
+  padding: 32px 28px 28px;
+  max-width: 360px;
+  width: 100%;
+  box-shadow: var(--shadow);
+  text-align: left;
+}
+
+.report-title {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-h);
+  margin: 0 0 6px;
+  letter-spacing: -0.3px;
+}
+
+.report-sub {
+  font-size: 14px;
+  color: var(--text);
+  margin: 0 0 20px;
+}
+
+.report-form {
+  display: contents;
+}
+
+.report-reasons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.report-reason {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  font-size: 14px;
+  color: var(--text-h);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.report-reason input[type='radio'] {
+  accent-color: var(--accent);
+  flex-shrink: 0;
+}
+
+.report-reason.selected {
+  border-color: var(--accent);
+  background: var(--accent-bg);
+  color: var(--accent);
+}
+
+.report-footer {
+  display: flex;
+  gap: 10px;
+}
+
+.report-cancel {
+  flex: 1;
+  padding: 11px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--text-h);
+  font-size: 14px;
+  font-family: var(--sans);
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.report-cancel:hover {
+  border-color: var(--accent);
+}
+
+.report-submit {
+  flex: 1.5;
+  padding: 11px;
+  border: none;
+  border-radius: 10px;
+  background: #ef4444;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 500;
+  font-family: var(--sans);
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.report-submit:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.report-submit:not(:disabled):hover {
+  opacity: 0.88;
+}

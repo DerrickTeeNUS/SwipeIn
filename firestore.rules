@@ -50,6 +50,14 @@ service cloud.firestore {
                     && resource.data.professionalId == request.auth.uid;
     }
 
+    // ── Reports ───────────────────────────────────────────────────────────────
+    match /reports/{reportId} {
+      allow create: if request.auth != null
+                    && request.resource.data.reporterId == request.auth.uid;
+      allow read:   if request.auth != null
+                    && resource.data.reporterId == request.auth.uid;
+    }
+
     // ── Applications ──────────────────────────────────────────────────────────
     match /applications/{appId} {
       allow create: if request.auth != null
