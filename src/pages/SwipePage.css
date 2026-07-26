@@ -499,6 +499,70 @@
   opacity: 0.88;
 }
 
+/* View profile link at bottom of top card */
+.card-view-btn {
+  display: block;
+  margin-top: 14px;
+  padding: 9px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 500;
+  text-align: center;
+  text-decoration: none;
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.card-view-btn:hover {
+  background: var(--accent-bg);
+  border-color: var(--accent-border);
+}
+
+/* Report button on top card */
+.card-report-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 25;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.card-report-btn:hover {
+  opacity: 1;
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+/* Toast notification */
+.report-toast {
+  position: fixed;
+  bottom: 100px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1a1b22;
+  color: #fff;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 500;
+  z-index: 300;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
 @media (prefers-color-scheme: dark) {
   .swipe-filter-clear {
     background: #1e2028;

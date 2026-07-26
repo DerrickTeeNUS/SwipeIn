@@ -2,7 +2,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { onAuthStateChanged } from 'firebase/auth'
-import { getDoc } from 'firebase/firestore'
+import { getDoc, setDoc } from 'firebase/firestore'
 import ProfessionalProfilePage from './ProfessionalProfilePage'
 
 vi.mock('../firebase', () => ({ auth: {}, db: {} }))
@@ -14,6 +14,8 @@ vi.mock('firebase/auth', () => ({
 vi.mock('firebase/firestore', () => ({
   doc: vi.fn(() => ({})),
   getDoc: vi.fn(),
+  setDoc: vi.fn(),
+  serverTimestamp: vi.fn(() => 'ts'),
 }))
 
 const mockNavigate = vi.fn()
@@ -243,5 +245,117 @@ describe('ProfessionalProfilePage', () => {
     renderPage()
     fireEvent.click(await screen.findByRole('button', { name: /back/i }))
     expect(mockNavigate).toHaveBeenCalledWith(-1)
+  })
+
+  // ─── Report feature ────────────────────────────────────────────────────────
+
+  it('shows a Report button when viewing another user\'s profile', async () => {
+    getDoc.mockResolvedValue({ exists: () => true, data: () => PROFESSIONAL_PROFILE })
+    renderPage('pro-1') // viewer-1 != pro-1
+    await screen.findByText('Bob Smith')
+    expect(screen.getByRole('button', { name: /report/i })).toBeInTheDocument()
+  })
+
+  it('does not show a Report button on the viewer\'s own profile', async () => {
+    authAs('pro-1') // own profile
+    getDoc.mockResolvedValue({ exists: () => true, data: () => PROFESSIONAL_PROFILE })
+    renderPage('pro-1')
+    await screen.findByText('Bob Smith')
+    expect(screen.queryByRole('button', { name: /report/i })).not.toBeInTheDocument()
+  })
+
+  it('opens the ReportModal when the Report button is clicked', async () => {
+    getDoc.mockResolvedValue({ exists: () => true, data: () => PROFESSIONAL_PROFILE })
+    renderPage('pro-1')
+    await screen.findByText('Bob Smith')
+    fireEvent.click(screen.getByRole('button', { name: /report/i }))
+    expect(await screen.findByText(/why are you reporting bob smith/i)).toBeInTheDocument()
+  })
+
+  it('closes the ReportModal when Cancel is clicked', async () => {
+    getDoc.mockResolvedValue({ exists: () => true, data: () => PROFESSIONAL_PROFILE })
+    renderPage('pro-1')
+    await screen.findByText('Bob Smith')
+    fireEvent.click(screen.getByRole('button', { name: /report/i }))
+    await screen.findByText(/why are you reporting bob smith/i)
+    fireEvent.click(screen.getByRole('button', { name: /cancel/i }))
+    await waitFor(() => {
+      expect(screen.queryByText(/why are you reporting/i)).not.toBeInTheDocument()
+    })
+  })
+
+  it('writes a report document and a pass-swipe to Firestore on submission', async () => {
+    getDoc
+      .mockResolvedValueOnce({ exists: () => true, data: () => PROFESSIONAL_PROFILE }) // profile load
+      .mockResolvedValueOnce({ exists: () => false }) // report check: not yet reported
+    setDoc.mockResolvedValue(undefined)
+
+    renderPage('pro-1')
+    await screen.findByText('Bob Smith')
+    fireEvent.click(screen.getByRole('button', { name: /report/i }))
+    fireEvent.click(await screen.findByRole('radio', { name: 'Spam or fake profile' }))
+    fireEvent.click(screen.getByRole('button', { name: /submit report/i }))
+
+    await waitFor(() => {
+      expect(setDoc).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.objectContaining({ reporterId: 'viewer-1', reportedId: 'pro-1', reason: 'Spam or fake profile' }),
+      )
+    })
+    expect(setDoc).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ from: 'viewer-1', to: 'pro-1', direction: 'pass' }),
+    )
+  })
+
+  it('shows a "Profile reported" toast after a successful first-time report', async () => {
+    getDoc
+      .mockResolvedValueOnce({ exists: () => true, data: () => PROFESSIONAL_PROFILE })
+      .mockResolvedValueOnce({ exists: () => false })
+    setDoc.mockResolvedValue(undefined)
+
+    renderPage('pro-1')
+    await screen.findByText('Bob Smith')
+    fireEvent.click(screen.getByRole('button', { name: /report/i }))
+    fireEvent.click(await screen.findByRole('radio', { name: 'Inappropriate content' }))
+    fireEvent.click(screen.getByRole('button', { name: /submit report/i }))
+
+    expect(await screen.findByRole('status')).toHaveTextContent('Profile reported')
+  })
+
+  it('shows "Already reported" toast and skips Firestore writes on a duplicate report', async () => {
+    getDoc
+      .mockResolvedValueOnce({ exists: () => true, data: () => PROFESSIONAL_PROFILE })
+      .mockResolvedValueOnce({ exists: () => true, data: () => ({ reporterId: 'viewer-1', reportedId: 'pro-1' }) })
+    setDoc.mockResolvedValue(undefined)
+
+    renderPage('pro-1')
+    await screen.findByText('Bob Smith')
+    fireEvent.click(screen.getByRole('button', { name: /report/i }))
+    fireEvent.click(await screen.findByRole('radio', { name: 'Other' }))
+    fireEvent.click(screen.getByRole('button', { name: /submit report/i }))
+
+    expect(await screen.findByRole('status')).toHaveTextContent('Already reported')
+    expect(setDoc).not.toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ reporterId: 'viewer-1' }),
+    )
+  })
+
+  it('closes the ReportModal after submission', async () => {
+    getDoc
+      .mockResolvedValueOnce({ exists: () => true, data: () => PROFESSIONAL_PROFILE })
+      .mockResolvedValueOnce({ exists: () => false })
+    setDoc.mockResolvedValue(undefined)
+
+    renderPage('pro-1')
+    await screen.findByText('Bob Smith')
+    fireEvent.click(screen.getByRole('button', { name: /report/i }))
+    fireEvent.click(await screen.findByRole('radio', { name: 'Misleading information' }))
+    fireEvent.click(screen.getByRole('button', { name: /submit report/i }))
+
+    await waitFor(() => {
+      expect(screen.queryByText(/why are you reporting/i)).not.toBeInTheDocument()
+    })
   })
 })

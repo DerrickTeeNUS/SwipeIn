@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { doc, getDoc } from 'firebase/firestore'
+import { doc, getDoc, serverTimestamp, setDoc } from 'firebase/firestore'
 import { onAuthStateChanged } from 'firebase/auth'
 import { db, auth } from '../firebase'
+import ReportModal from './ReportModal'
 import './StudentProfilePage.css'
 
 function StudentProfilePage() {
@@ -13,6 +14,8 @@ function StudentProfilePage() {
   const [currentUid, setCurrentUid] = useState(null)
   const [loading, setLoading] = useState(true)
   const [notFound, setNotFound] = useState(false)
+  const [showReport, setShowReport] = useState(false)
+  const [toast, setToast] = useState('')
 
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (user) => {
@@ -50,6 +53,29 @@ function StudentProfilePage() {
 
     fetchProfile()
   }, [uid])
+
+  async function handleSubmitReport(reason) {
+    const reportId = `${currentUid}_${uid}`
+    const existing = await getDoc(doc(db, 'reports', reportId))
+    if (!existing.exists()) {
+      await setDoc(doc(db, 'reports', reportId), {
+        reporterId: currentUid,
+        reportedId: uid,
+        reason,
+        createdAt: serverTimestamp(),
+      })
+      await setDoc(doc(db, 'swipes', reportId), {
+        from: currentUid,
+        to: uid,
+        direction: 'pass',
+        createdAt: serverTimestamp(),
+      })
+    }
+    setShowReport(false)
+    const msg = existing.exists() ? 'Already reported' : 'Profile reported'
+    setToast(msg)
+    setTimeout(() => setToast(''), 2500)
+  }
 
   if (loading) {
     return (
@@ -133,6 +159,11 @@ function StudentProfilePage() {
                     <LinkedInIcon /> LinkedIn
                   </a>
                 )}
+                {!isOwnProfile && (
+                  <button className="sp-report-btn" onClick={() => setShowReport(true)}>
+                    <FlagIcon /> Report
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -180,6 +211,17 @@ function StudentProfilePage() {
           )}
         </div>
       </div>
+      {showReport && (
+        <ReportModal
+          reportedName={profile.displayName}
+          onSubmit={handleSubmitReport}
+          onClose={() => setShowReport(false)}
+        />
+      )}
+
+      {toast && (
+        <div className="sp-toast" role="status">{toast}</div>
+      )}
     </div>
   )
 }
@@ -225,6 +267,15 @@ function LinkedInIcon() {
       <path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z" />
       <rect x="2" y="9" width="4" height="12" />
       <circle cx="4" cy="4" r="2" />
+    </svg>
+  )
+}
+
+function FlagIcon() {
+  return (
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
+      <line x1="4" y1="22" x2="4" y2="15" />
     </svg>
   )
 }

@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { onAuthStateChanged } from 'firebase/auth'
 import { collection, doc, getDoc, getDocs, query, serverTimestamp, setDoc, where } from 'firebase/firestore'
 import { auth, db } from '../firebase'
+import ReportModal from './ReportModal'
 import './SwipePage.css'
 
 const SWIPE_THRESHOLD = 100
@@ -46,6 +47,8 @@ export default function SwipePage() {
   const [filters, setFilters] = useState({ location: '', industry: '', skills: '', university: '' })
   const [loading, setLoading] = useState(true)
   const [matchedProfile, setMatchedProfile] = useState(null)
+  const [reportingProfile, setReportingProfile] = useState(null)
+  const [toast, setToast] = useState('')
   const topCardRef = useRef(null)
   const isSwiping = useRef(false)
 
@@ -132,6 +135,37 @@ export default function SwipePage() {
     setIndex(i => i + 1)
     doSwipe(dir, profile)
   }, [profiles, index, doSwipe])
+
+  const handleOpenReport = useCallback(() => {
+    const profile = profiles[index]
+    if (profile) setReportingProfile(profile)
+  }, [profiles, index])
+
+  const handleSubmitReport = useCallback(async (reason) => {
+    const profile = reportingProfile
+    if (!profile || !currentUser) return
+    const reportId = `${currentUser.uid}_${profile.uid}`
+    const existing = await getDoc(doc(db, 'reports', reportId))
+    if (!existing.exists()) {
+      await setDoc(doc(db, 'reports', reportId), {
+        reporterId: currentUser.uid,
+        reportedId: profile.uid,
+        reason,
+        createdAt: serverTimestamp(),
+      })
+      await setDoc(doc(db, 'swipes', reportId), {
+        from: currentUser.uid,
+        to: profile.uid,
+        direction: 'pass',
+        createdAt: serverTimestamp(),
+      })
+    }
+    setAllProfiles(prev => prev.filter(p => p.uid !== profile.uid))
+    setReportingProfile(null)
+    const msg = existing.exists() ? 'Already reported' : 'Profile reported'
+    setToast(msg)
+    setTimeout(() => setToast(''), 2500)
+  }, [reportingProfile, currentUser])
 
   // Called by the action buttons
   const handleButtonSwipe = useCallback((dir) => {
@@ -239,6 +273,7 @@ export default function SwipePage() {
                 profile={profile}
                 stackIndex={stackIndex}
                 onDragSwipe={handleDragSwipe}
+                onReport={stackIndex === 0 ? handleOpenReport : null}
               />
             ))}
           </div>
@@ -263,13 +298,25 @@ export default function SwipePage() {
           onClose={() => setMatchedProfile(null)}
         />
       )}
+
+      {reportingProfile && (
+        <ReportModal
+          reportedName={reportingProfile.displayName}
+          onSubmit={handleSubmitReport}
+          onClose={() => setReportingProfile(null)}
+        />
+      )}
+
+      {toast && (
+        <div className="report-toast" role="status">{toast}</div>
+      )}
     </div>
   )
 }
 
 // ─── Swipe Card ──────────────────────────────────────────────────────────────
 
-const SwipeCard = forwardRef(function SwipeCard({ profile, stackIndex, onDragSwipe }, ref) {
+const SwipeCard = forwardRef(function SwipeCard({ profile, stackIndex, onDragSwipe, onReport }, ref) {
   const cardRef = useRef(null)
   const drag = useRef({ active: false, startX: 0, x: 0 })
   const [stamp, setStamp] = useState(null) // 'like' | 'pass' | null
@@ -346,6 +393,16 @@ const SwipeCard = forwardRef(function SwipeCard({ profile, stackIndex, onDragSwi
         <>
           <div className={`swipe-stamp like-stamp${stamp === 'like' ? ' visible' : ''}`}>LIKE</div>
           <div className={`swipe-stamp pass-stamp${stamp === 'pass' ? ' visible' : ''}`}>PASS</div>
+          {onReport && (
+            <button
+              className="card-report-btn"
+              aria-label="Report profile"
+              onClick={onReport}
+              onPointerDown={e => e.stopPropagation()}
+            >
+              <FlagIcon />
+            </button>
+          )}
         </>
       )}
 
@@ -412,6 +469,16 @@ const SwipeCard = forwardRef(function SwipeCard({ profile, stackIndex, onDragSwi
               </div>
             )}
           </>
+        )}
+
+        {isTop && (
+          <Link
+            to={`/${profile.role === 'professional' ? 'professional' : 'student'}/${profile.uid}`}
+            className="card-view-btn"
+            onPointerDown={e => e.stopPropagation()}
+          >
+            View profile
+          </Link>
         )}
       </div>
     </div>
@@ -520,6 +587,15 @@ function SparkleIcon() {
   return (
     <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <path d="M12 2l2.4 7.4H22l-6.2 4.5 2.4 7.4L12 17l-6.2 4.3 2.4-7.4L2 9.4h7.6z" />
+    </svg>
+  )
+}
+
+function FlagIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
+      <line x1="4" y1="22" x2="4" y2="15" />
     </svg>
   )
 }
